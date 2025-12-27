@@ -1,0 +1,384 @@
+<!-- Overlay para bloquear interacciones con elementos debajo -->
+<div class="kiosk-overlay" *ngIf="isKioskMode"></div>
+
+<div class="ticket-container">
+  <!-- Encabezado -->
+  <div class="header">
+    <mat-icon class="header-icon">local_hospital</mat-icon>
+    <h1>GENERACIÓN DE TICKETS</h1>
+    <h2>Laboratorios Muñoz</h2>
+  </div>
+
+  <!-- Botón de pantalla completa -->
+  <div class="fullscreen-control" *ngIf="!isFullscreen">
+    <button
+      mat-raised-button
+      (click)="enterFullscreen()"
+      class="fullscreen-button">
+      <mat-icon>fullscreen</mat-icon>
+      Activar Pantalla Completa
+    </button>
+  </div>
+
+  <div class="logo-container">
+    <img src="assets/logoInicio.png" alt="Logo Laboratorios Muñoz" class="logo-inicio">
+  </div>
+
+  <!-- Búsqueda de Paciente -->
+  <div class="search-section" *ngIf="!currentPatient && !showPatientForm">
+    <mat-card class="search-card">
+      <mat-card-content>
+        <!-- Logo centrado sobre el título -->
+
+        <h2>Ingrese su Número de Documento</h2>
+        <form [formGroup]="searchForm" (ngSubmit)="searchPatient()">
+          <mat-form-field appearance="outline" class="document-field">
+            <mat-label>Número de Documento</mat-label>
+            <input
+              matInput
+              formControlName="documentNumber"
+              type="text"
+              readonly
+              placeholder="Use el teclado numérico"
+              autocomplete="off"
+              class="large-input">
+            <mat-icon matSuffix>badge</mat-icon>
+            <mat-error *ngIf="searchForm.get('documentNumber')?.hasError('required')">
+              El documento es requerido
+            </mat-error>
+            <mat-error *ngIf="searchForm.get('documentNumber')?.hasError('minlength')">
+              Mínimo 8 dígitos
+            </mat-error>
+          </mat-form-field>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Teclado Numérico Circular -->
+    <div class="numeric-keyboard">
+      <div class="keyboard-row">
+        <button
+          *ngFor="let num of [1,2,3]"
+          class="key-circle"
+          type="button"
+          (click)="addNumber(num.toString())">
+          {{ num }}
+        </button>
+      </div>
+      <div class="keyboard-row">
+        <button
+          *ngFor="let num of [4,5,6]"
+          class="key-circle"
+          type="button"
+          (click)="addNumber(num.toString())">
+          {{ num }}
+        </button>
+      </div>
+      <div class="keyboard-row">
+        <button
+          *ngFor="let num of [7,8,9]"
+          class="key-circle"
+          type="button"
+          (click)="addNumber(num.toString())">
+          {{ num }}
+        </button>
+      </div>
+      <div class="keyboard-row special-row">
+        <button
+          class="key-circle key-clear"
+          type="button"
+          (click)="clearNumber()">
+          <mat-icon>clear</mat-icon>
+        </button>
+        <button
+          class="key-circle"
+          type="button"
+          (click)="addNumber('0')">
+          0
+        </button>
+        <button
+          class="key-circle key-backspace"
+          type="button"
+          (click)="backspace()">
+          <mat-icon>backspace</mat-icon>
+        </button>
+      </div>
+
+      <!-- Botón de buscar -->
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        class="search-button"
+        [disabled]="isSearching || searchForm.invalid"
+        (click)="searchPatient()">
+        <mat-icon *ngIf="!isSearching">search</mat-icon>
+        <mat-spinner *ngIf="isSearching" diameter="20"></mat-spinner>
+        {{ isSearching ? 'BUSCANDO...' : 'BUSCAR PACIENTE' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulario de Registro de Paciente Nuevo -->
+  <div class="registration-section" *ngIf="showPatientForm">
+    <mat-card class="registration-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>person_add</mat-icon>
+          Registro de Paciente Nuevo
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="patientForm">
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Número de Documento</mat-label>
+              <input matInput formControlName="documentNumber" readonly>
+              <mat-icon matSuffix>badge</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Nombre Completo</mat-label>
+              <input
+                matInput
+                formControlName="fullName"
+                placeholder="Ingrese nombres y apellidos">
+              <mat-icon matSuffix>person</mat-icon>
+              <mat-error *ngIf="patientForm.get('fullName')?.hasError('required')">
+                El nombre es requerido
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha de Nacimiento</mat-label>
+              <input
+                matInput
+                type="date"
+                formControlName="birthDate"
+                [max]="getMaxDate()"
+                [min]="getMinDate()">
+              <mat-icon matSuffix>calendar_today</mat-icon>
+              <mat-error *ngIf="patientForm.get('birthDate')?.hasError('required')">
+                La fecha es requerida
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Género</mat-label>
+              <mat-select formControlName="gender">
+                <mat-option value="M">Masculino</mat-option>
+                <mat-option value="F">Femenino</mat-option>
+                <mat-option value="Otro">Otro</mat-option>
+              </mat-select>
+              <mat-icon matSuffix>wc</mat-icon>
+              <mat-error *ngIf="patientForm.get('gender')?.hasError('required')">
+                El género es requerido
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Teléfono (Opcional)</mat-label>
+              <input
+                matInput
+                formControlName="phone"
+                placeholder="999888777"
+                type="tel">
+              <mat-icon matSuffix>phone</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Email (Opcional)</mat-label>
+              <input
+                matInput
+                formControlName="email"
+                placeholder="correo@ejemplo.com"
+                type="email">
+              <mat-icon matSuffix>email</mat-icon>
+              <mat-error *ngIf="patientForm.get('email')?.hasError('email')">
+                Email inválido
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-actions">
+            <button
+              mat-raised-button
+              type="button"
+              (click)="cancelRegistration()"
+              class="cancel-button">
+              <mat-icon>close</mat-icon>
+              CANCELAR
+            </button>
+
+            <button
+              mat-raised-button
+              color="primary"
+              type="button"
+              (click)="registerPatient()"
+              class="register-button"
+              [disabled]="isSearching || patientForm.invalid">
+              <mat-icon *ngIf="!isSearching">save</mat-icon>
+              <mat-spinner *ngIf="isSearching" diameter="20"></mat-spinner>
+              {{ isSearching ? 'REGISTRANDO...' : 'REGISTRAR PACIENTE' }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Panel de Información del Paciente y Servicios -->
+  <div class="patient-services-section" *ngIf="currentPatient">
+    <mat-card class="patient-info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>person</mat-icon>
+          Información del Paciente
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="patient-details">
+          <div class="detail-row detail-row-large">
+            <span class="label">Documento:</span>
+            <span class="value">{{ currentPatient.DocumentNumber }}</span>
+          </div>
+          <div class="detail-row detail-row-large">
+            <span class="label">Nombre:</span>
+            <span class="value">{{ currentPatient.FullName }}</span>
+          </div>
+        </div>
+
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="newSearch()"
+          class="new-search-button">
+          <mat-icon>search</mat-icon>
+          NUEVA BÚSQUEDA
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Grid de Servicios -->
+    <div class="services-section">
+      <h2 class="services-title">Seleccione el Tipo de Servicio</h2>
+
+      <div class="services-grid">
+        <button
+          *ngFor="let service of serviceTypes"
+          mat-raised-button
+          class="service-button"
+          [style.background-color]="service.Color || '#2196F3'"
+          (click)="selectService(service)"
+          [disabled]="isCreatingTicket">
+
+          <mat-icon class="service-icon">
+            {{ getServiceIcon(service.Name) }}
+          </mat-icon>
+
+          <span class="service-name">{{ service.Name }}</span>
+
+          <span class="service-time">
+            <mat-icon>schedule</mat-icon>
+            {{ service.AverageTimeMinutes }} min
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diálogo de Ticket Generado -->
+  <div class="ticket-overlay" *ngIf="generatedTicket">
+    <div class="ticket-dialog">
+      <div class="ticket-header">
+        <mat-icon class="success-icon">check_circle</mat-icon>
+        <h2>TICKET GENERADO EXITOSAMENTE</h2>
+      </div>
+
+      <div class="ticket-content">
+        <div class="ticket-number">
+          <span class="label">SU TURNO ES:</span>
+          <span class="number">{{ generatedTicket.TicketNumber }}</span>
+        </div>
+
+        <div class="ticket-details">
+          <div class="ticket-row">
+            <mat-icon>person</mat-icon>
+            <span class="label">Paciente:</span>
+            <span class="value">{{ generatedTicket.PatientName }}</span>
+          </div>
+
+          <div class="ticket-row">
+            <mat-icon>badge</mat-icon>
+            <span class="label">Documento:</span>
+            <span class="value">{{ generatedTicket.PatientDocument }}</span>
+          </div>
+
+          <div class="ticket-row">
+            <mat-icon>medical_services</mat-icon>
+            <span class="label">Servicio:</span>
+            <span class="value">{{ generatedTicket.ServiceTypeName }}</span>
+          </div>
+
+          <div class="ticket-row">
+            <mat-icon>schedule</mat-icon>
+            <span class="label">Tiempo Estimado:</span>
+            <span class="value">{{ generatedTicket.EstimatedTime }} minutos</span>
+          </div>
+
+          <div class="ticket-row">
+            <mat-icon>calendar_today</mat-icon>
+            <span class="label">Fecha y Hora:</span>
+            <span class="value">{{ generatedTicket.CreatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+          </div>
+        </div>
+
+        <div class="ticket-instructions">
+          <mat-icon>info</mat-icon>
+          <p>Por favor, conserve este ticket y espere su turno en la sala de espera.</p>
+        </div>
+      </div>
+
+      <div class="ticket-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="printTicket()"
+          class="print-button">
+          <mat-icon>print</mat-icon>
+          IMPRIMIR TICKET
+        </button>
+
+        <button
+          mat-raised-button
+          (click)="closeTicketDialog()"
+          class="close-button">
+          <mat-icon>close</mat-icon>
+          CERRAR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" *ngIf="isCreatingTicket">
+    <mat-spinner diameter="60"></mat-spinner>
+    <p>Generando ticket...</p>
+  </div>
+
+  <!-- Botón de salida del modo kiosko -->
+  <button
+    *ngIf="isKioskMode"
+    mat-icon-button
+    class="exit-kiosk-button"
+    (click)="exitKioskRequest()"
+    matTooltip="Salir del modo kiosko">
+    <mat-icon>exit_to_app</mat-icon>
+  </button>
+  <!-- Logo Ingenius en esquina inferior derecha -->
+  <div class="logo-ingenius-container">
+    <img src="assets/logoIngenius.png" alt="Powered by Ingenius" class="logo-ingenius">
+  </div>
+</div>

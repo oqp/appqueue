@@ -1,0 +1,29 @@
+# ===== Python =====
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+.coverage
+.pytest_cache/
+
+# ===== Node / Angular =====
+node_modules/
+dist/
+.angular/
+
+# ===== IDEs =====
+.idea/
+.vscode/
+
+# ===== Archivos temporales =====
+*.log
+*.rar
+output.txt
+
+# ===== OS =====
+Thumbs.db
+.DS_Store
+
+queue-printserver/
+tools/

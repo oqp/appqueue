@@ -1,0 +1,244 @@
+<!-- workstations.component.html -->
+<div class="workstations-container">
+  <!-- Header con estadísticas -->
+  <mat-card class="stats-card mb-3">
+    <mat-card-content>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <mat-icon color="primary">desktop_windows</mat-icon>
+          <div class="stat-value">{{ totalStations }}</div>
+          <div class="stat-label">Total Estaciones</div>
+        </div>
+        <div class="stat-item">
+          <mat-icon style="color: #28a745;">power</mat-icon>
+          <div class="stat-value">{{ activeStations }}</div>
+          <div class="stat-label">Activas</div>
+        </div>
+        <div class="stat-item">
+          <mat-icon color="primary">check_circle</mat-icon>
+          <div class="stat-value">{{ availableStations }}</div>
+          <div class="stat-label">Disponibles</div>
+        </div>
+        <div class="stat-item">
+          <mat-icon color="accent">pending</mat-icon>
+          <div class="stat-value">{{ busyStations }}</div>
+          <div class="stat-label">Ocupadas</div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Filtros -->
+  <mat-card class="filters-card mb-3">
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filters-form">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Buscar</mat-label>
+          <input matInput formControlName="search" placeholder="Nombre, código o ubicación">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Estado</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="">Todos</mat-option>
+            <mat-option *ngFor="let status of statusOptions" [value]="status">
+              {{ getStatusLabel(status) }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Tipo de Servicio</mat-label>
+          <mat-select formControlName="serviceType">
+            <mat-option value="">Todos</mat-option>
+            <mat-option *ngFor="let type of serviceTypes" [value]="type.Id">
+              {{ type.Name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="filter-actions">
+          <mat-checkbox formControlName="onlyActive">Solo activas</mat-checkbox>
+          <button mat-button (click)="clearFilters()" color="primary">
+            <mat-icon>clear</mat-icon>
+            Limpiar
+          </button>
+          <button mat-raised-button color="primary" (click)="loadStations()">
+            <mat-icon>refresh</mat-icon>
+            Actualizar
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Tabla de estaciones -->
+
+  <mat-card>
+    <mat-card-header  style="width: 100%;">
+      <mat-card-title  style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+
+          <span class="title-text">Estaciones de Trabajo</span>
+          <button mat-raised-button color="primary"
+                  (click)="createStation()"
+                  *ngIf="canEdit" class="new-station-btn">
+            <mat-icon>add</mat-icon>
+            Nueva Estación
+          </button>
+
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Loading spinner -->
+      <div *ngIf="loading" class="loading-container">
+        <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+      </div>
+
+      <!-- Data table -->
+      <div class="table-container" *ngIf="!loading">
+        <table mat-table [dataSource]="dataSource" matSort class="stations-table">
+          <!-- Código Column -->
+          <ng-container matColumnDef="Code">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Código</th>
+            <td mat-cell *matCellDef="let station">
+              <span class="code-badge">{{ station.Code }}</span>
+            </td>
+          </ng-container>
+          <!-- Nombre Column -->
+          <ng-container matColumnDef="Name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
+            <td mat-cell *matCellDef="let station">
+              <div class="station-name">
+                <strong>{{ station.Name }}</strong>
+                <small *ngIf="station.Description" class="text-muted d-block">
+                  {{ station.Description }}
+                </small>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Tipo de Servicio Column -->
+          <ng-container matColumnDef="ServiceType">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Servicio</th>
+            <td mat-cell *matCellDef="let station">
+              <mat-chip *ngIf="station.ServiceTypeName">
+                {{ station.ServiceTypeName }}
+              </mat-chip>
+              <span *ngIf="!station.ServiceTypeName" class="text-muted">-</span>
+            </td>
+          </ng-container>
+
+          <!-- Ubicación Column -->
+          <ng-container matColumnDef="Location">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Ubicación</th>
+            <td mat-cell *matCellDef="let station">
+              <div class="location-cell">
+                <mat-icon class="location-icon">location_on</mat-icon>
+                {{ station.Location || '-' }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Estado Column -->
+          <ng-container matColumnDef="Status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+            <td mat-cell *matCellDef="let station">
+              <button mat-button [color]="getStatusColor(station.Status)"
+                      [matMenuTriggerFor]="statusMenu"
+                      [disabled]="!canChangeStatus"
+                      class="status-button">
+                <mat-icon>{{ getStatusIcon(station.Status) }}</mat-icon>
+                {{ getStatusLabel(station.Status) }}
+              </button>
+
+              <mat-menu #statusMenu="matMenu">
+                <button mat-menu-item *ngFor="let status of statusOptions"
+                        (click)="changeStatus(station, status)"
+                        [disabled]="station.Status === status">
+                  <mat-icon>{{ getStatusIcon(status) }}</mat-icon>
+                  {{ getStatusLabel(status) }}
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <!-- Ticket Actual Column -->
+          <ng-container matColumnDef="CurrentTicket">
+            <th mat-header-cell *matHeaderCellDef>Ticket Actual</th>
+            <td mat-cell *matCellDef="let station">
+              <span *ngIf="station.CurrentTicketNumber" class="ticket-number">
+                {{ station.CurrentTicketNumber }}
+              </span>
+              <span *ngIf="!station.CurrentTicketNumber" class="text-muted">-</span>
+            </td>
+          </ng-container>
+
+          <!-- Cola Column -->
+          <ng-container matColumnDef="QueueLength">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Cola</th>
+            <td mat-cell *matCellDef="let station">
+              <span [matBadge]="station.QueueLength || 0"
+                    matBadgeColor="accent"
+                    [matBadgeHidden]="!station.QueueLength">
+                <mat-icon>people</mat-icon>
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Acciones Column -->
+          <ng-container matColumnDef="Actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let station">
+              <button mat-icon-button
+                      matTooltip="Ver detalles"
+                      (click)="viewDetails(station)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+
+              <button mat-icon-button
+                      matTooltip="Asignar usuario"
+                      (click)="assignUser(station)"
+                      *ngIf="canEdit">
+                <mat-icon>person_add</mat-icon>
+              </button>
+
+              <button mat-icon-button
+                      matTooltip="Editar"
+                      (click)="editStation(station)"
+                      *ngIf="canEdit">
+                <mat-icon>edit</mat-icon>
+              </button>
+
+              <button mat-icon-button
+                      matTooltip="Eliminar"
+                      color="warn"
+                      (click)="deleteStation(station)"
+                      *ngIf="canDelete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <!-- Header and Row Declarations -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              [class.inactive-row]="!row.IsActive"></tr>
+
+          <!-- No data row -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
+              No se encontraron estaciones
+            </td>
+          </tr>
+        </table>
+
+        <!-- Paginator -->
+        <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]"
+                       showFirstLastButtons
+                       aria-label="Seleccionar página">
+        </mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

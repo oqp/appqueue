@@ -1,0 +1,137 @@
+<div class="service-type-dialog">
+  <!-- Header -->
+  <h2 mat-dialog-title class="mat-dialog-title">
+    <mat-icon>{{ isEditMode ? 'edit' : 'add_circle' }}</mat-icon>
+    {{ isEditMode ? 'Editar Tipo de Atención' : 'Nuevo Tipo de Atención' }}
+  </h2>
+
+  <!-- Content -->
+  <mat-dialog-content class="mat-dialog-content">
+    <form [formGroup]="form" class="service-type-form">
+
+      <!-- Información Básica -->
+      <div class="form-section">
+        <div class="section-title">Información Básica</div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field-half">
+            <mat-label>Código<span class="required-indicator">*</span></mat-label>
+            <input matInput formControlName="Code"
+                   placeholder="Ej: LAB, RES, MUE"
+                   [readonly]="isEditMode"
+                   style="text-transform: uppercase;">
+            <mat-hint>Código único de 2-10 caracteres</mat-hint>
+            <mat-error>{{ getErrorMessage('Code') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field-half">
+            <mat-label>Prefijo de Ticket<span class="required-indicator">*</span></mat-label>
+            <input matInput formControlName="TicketPrefix"
+                   placeholder="Ej: A, B, LAB"
+                   style="text-transform: uppercase;">
+            <mat-hint>Prefijo para números de ticket</mat-hint>
+            <mat-error>{{ getErrorMessage('TicketPrefix') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="form-field-full">
+          <mat-label>Nombre<span class="required-indicator">*</span></mat-label>
+          <input matInput formControlName="Name"
+                 placeholder="Ej: Análisis de Laboratorio">
+          <mat-error>{{ getErrorMessage('Name') }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-full">
+          <mat-label>Descripción</mat-label>
+          <textarea matInput formControlName="Description"
+                    placeholder="Descripción detallada del tipo de atención"
+                    rows="3"></textarea>
+          <mat-hint align="end">{{ form.get('Description')?.value?.length || 0 }}/500</mat-hint>
+          <mat-error>{{ getErrorMessage('Description') }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Configuración -->
+      <div class="form-section">
+        <div class="section-title">Configuración</div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field-half">
+            <mat-label>Prioridad<span class="required-indicator">*</span></mat-label>
+            <mat-select formControlName="Priority">
+              <mat-option *ngFor="let option of priorityOptions" [value]="option.value">
+                <div class="priority-option">
+                  <span class="priority-label">{{ option.label }}</span>
+                  <span class="priority-description">{{ option.description }}</span>
+                </div>
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('Priority') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field-half">
+            <mat-label>Tiempo Promedio (minutos)<span class="required-indicator">*</span></mat-label>
+            <input matInput type="number" formControlName="AverageTimeMinutes"
+                   placeholder="Ej: 15" min="1" max="180">
+            <mat-icon matPrefix>schedule</mat-icon>
+            <mat-error>{{ getErrorMessage('AverageTimeMinutes') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Personalización -->
+      <div class="form-section">
+        <div class="section-title">Personalización</div>
+
+        <div class="color-selector">
+          <div class="color-label">Color del servicio</div>
+
+          <div class="color-options">
+            <div *ngFor="let color of predefinedColors"
+                 class="color-option"
+                 [style.background-color]="color"
+                 [class.selected]="selectedColor === color"
+                 (click)="onColorSelect(color)">
+            </div>
+          </div>
+
+          <div class="custom-color">
+            <div class="color-input-wrapper">
+              <input type="color"
+                     [value]="selectedColor"
+                     (change)="onColorInputChange($event)">
+            </div>
+            <mat-form-field appearance="outline" class="hex-input">
+              <mat-label>Código Hex</mat-label>
+              <input matInput formControlName="Color"
+                     placeholder="#000000"
+                     [value]="selectedColor">
+              <mat-error>{{ getErrorMessage('Color') }}</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista previa -->
+      <div class="preview-section" *ngIf="form.get('TicketPrefix')?.value">
+        <div class="preview-title">Vista previa del ticket</div>
+        <div class="preview-ticket" [style.border-left]="'4px solid ' + selectedColor">
+          <span class="ticket-prefix">{{ form.get('TicketPrefix')?.value }}</span>
+          <span class="ticket-number">001</span>
+        </div>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+
+  <!-- Actions -->
+  <mat-dialog-actions class="mat-dialog-actions">
+    <button mat-button (click)="onCancel()">Cancelar</button>
+    <button mat-raised-button color="primary"
+            (click)="onSubmit()"
+            [disabled]="form.invalid">
+      <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+      {{ isEditMode ? 'Actualizar' : 'Crear' }}
+    </button>
+  </mat-dialog-actions>
+</div>

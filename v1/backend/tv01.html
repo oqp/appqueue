@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QXpert - Pantalla de Turnos con Video</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            color: #1a365d;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(30, 58, 95, 0.3);
+            min-height: 100px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 12px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .logo-img {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .datetime {
+            text-align: right;
+            color: white;
+        }
+
+        .datetime .time {
+            font-size: 3rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .datetime .date {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            height: calc(100vh - 100px);
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Panel izquierdo - Video */
+        .video-panel {
+            flex: 1;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-label {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+            color: white;
+            padding: 15px 25px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        /* Panel derecho - Turnos */
+        .queue-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Panel de Ticket Actual */
+        .current-ticket-panel {
+            flex: 1.5;
+            background: linear-gradient(145deg, #2b6cb0, #1e4e8c);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(43, 108, 176, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .current-ticket-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+            animation: shimmer 20s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .current-ticket-panel h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            color: rgba(255, 255, 255, 0.9);
+            position: relative;
+            z-index: 1;
+        }
+
+        .current-ticket-number {
+            font-size: 10rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
+            position: relative;
+            z-index: 1;
+            line-height: 1;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .current-station {
+            font-size: 2.2rem;
+            margin-top: 25px;
+            padding: 15px 50px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #1e4e8c;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            position: relative;
+            z-index: 1;
+        }
+
+        .current-service {
+            font-size: 1.4rem;
+            margin-top: 15px;
+            color: rgba(255, 255, 255, 0.9);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Sección de últimas llamadas */
+        .queue-section {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 6px 25px rgba(30, 58, 95, 0.12);
+            border: 2px solid rgba(30, 58, 95, 0.06);
+        }
+
+        .queue-section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #1e3a5f;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .queue-section h3::before {
+            content: '';
+            width: 5px;
+            height: 25px;
+            background: linear-gradient(180deg, #2b6cb0, #63b3ed);
+            border-radius: 3px;
+        }
+
+        /* Historial de llamadas */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: linear-gradient(145deg, #f7fafc, #edf2f7);
+            border-radius: 10px;
+            border-left: 4px solid #2b6cb0;
+        }
+
+        .history-item .ticket-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .history-item .ticket-number {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #1e3a5f;
+        }
+
+        .history-item .station {
+            color: #4a5568;
+            font-size: 1rem;
+        }
+
+        .history-item .time {
+            color: #718096;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Sin tickets */
+        .no-tickets {
+            text-align: center;
+            color: #a0aec0;
+            padding: 40px;
+            font-size: 1.3rem;
+        }
+
+        /* Estado de conexion */
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+        }
+
+        .connection-status.connected {
+            background: white;
+            color: #38a169;
+            border: 2px solid #38a169;
+        }
+
+        .connection-status.disconnected {
+            background: white;
+            color: #e53e3e;
+            border: 2px solid #e53e3e;
+        }
+
+        .connection-status.connecting {
+            background: white;
+            color: #d69e2e;
+            border: 2px solid #d69e2e;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        .connected .status-dot { background: #38a169; }
+        .disconnected .status-dot { background: #e53e3e; }
+        .connecting .status-dot { background: #d69e2e; }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Llamada activa */
+        .calling {
+            animation: calling 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes calling {
+            from { box-shadow: 0 0 30px rgba(43, 108, 176, 0.5); }
+            to { box-shadow: 0 0 80px rgba(43, 108, 176, 0.9); }
+        }
+
+        /* Scrollbar */
+        .history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: #edf2f7;
+            border-radius: 3px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        /* Media queries para TV */
+        @media (min-width: 1920px) {
+            .logo { padding: 15px 30px; }
+            .logo-img { height: 90px; }
+            .datetime .time { font-size: 3.5rem; }
+            .current-ticket-number { font-size: 12rem; }
+            .current-station { font-size: 2.5rem; }
+            .video-label { font-size: 1.4rem; padding: 18px 30px; }
+        }
+
+        @media (min-width: 2560px) {
+            .header { padding: 20px 50px; min-height: 130px; }
+            .logo { padding: 18px 35px; border-radius: 15px; }
+            .logo-img { height: 110px; }
+            .datetime .time { font-size: 4.5rem; }
+            .datetime .date { font-size: 1.6rem; }
+            .current-ticket-panel h2 { font-size: 2.5rem; }
+            .current-ticket-number { font-size: 16rem; }
+            .current-station { font-size: 3rem; padding: 20px 60px; }
+            .current-service { font-size: 1.8rem; }
+            .queue-section h3 { font-size: 2rem; }
+            .history-item .ticket-number { font-size: 1.6rem; }
+            .history-item .station, .history-item .time { font-size: 1.3rem; }
+            .video-label { font-size: 1.8rem; padding: 22px 35px; }
+        }
+
+        @media (min-width: 3840px) {
+            .header { padding: 30px 70px; min-height: 160px; }
+            .logo { padding: 20px 45px; border-radius: 18px; }
+            .logo-img { height: 140px; }
+            .datetime .time { font-size: 6rem; }
+            .datetime .date { font-size: 2rem; }
+            .main-content { padding: 30px; gap: 30px; }
+            .current-ticket-panel { padding: 50px; border-radius: 30px; }
+            .current-ticket-panel h2 { font-size: 3.5rem; letter-spacing: 10px; }
+            .current-ticket-number { font-size: 22rem; }
+            .current-station { font-size: 4rem; padding: 30px 80px; }
+            .current-service { font-size: 2.5rem; }
+            .queue-section { padding: 40px; border-radius: 25px; }
+            .queue-section h3 { font-size: 2.5rem; margin-bottom: 30px; }
+            .history-item { padding: 25px 35px; }
+            .history-item .ticket-number { font-size: 2.2rem; }
+            .history-item .station, .history-item .time { font-size: 1.8rem; }
+            .video-label { font-size: 2.2rem; padding: 28px 45px; }
+            .video-panel { border-radius: 30px; }
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="logo">
+        <img src="Logo.png" alt="Laboratorios Muñoz" class="logo-img">
+    </div>
+    <div class="datetime">
+        <div class="time" id="currentTime">--:--:--</div>
+        <div class="date" id="currentDate">-- de ---- de ----</div>
+    </div>
+</header>
+
+<main class="main-content">
+    <!-- Panel izquierdo - Video de YouTube -->
+    <section class="video-panel">
+        <div class="video-label">📺 Información de Servicios</div>
+        <div class="video-container">
+            <!--
+                INSTRUCCIONES PARA CONFIGURAR LOS VIDEOS:
+
+                1. Reemplaza VIDEO_ID_1, VIDEO_ID_2, etc. con los IDs de tus videos de YouTube
+                   Por ejemplo: si tu video es https://www.youtube.com/watch?v=ABC123
+                   El VIDEO_ID sería: ABC123
+
+                2. Para una playlist, usa:
+                   https://www.youtube.com/embed/videoseries?list=PLAYLIST_ID&autoplay=1&mute=1&loop=1
+
+                3. Parámetros importantes:
+                   - autoplay=1 : Reproducción automática
+                   - mute=1 : Sin sonido (requerido para autoplay)
+                   - loop=1 : Repetir en bucle
+                   - controls=0 : Ocultar controles
+                   - modestbranding=1 : Logo YouTube pequeño
+                   - rel=0 : No mostrar videos relacionados
+            -->
+            <iframe
+                id="youtubePlayer"
+                src="https://www.youtube.com/embed/VIDEO_ID_1?autoplay=1&mute=1&loop=1&controls=0&modestbranding=1&rel=0&playlist=VIDEO_ID_1"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </section>
+
+    <!-- Panel derecho - Turnos -->
+    <section class="queue-panel">
+        <!-- Panel de Ticket Actual -->
+        <div class="current-ticket-panel" id="currentTicketPanel">
+            <h2>Turno Actual</h2>
+            <div class="current-ticket-number" id="currentTicketNumber">---</div>
+            <div class="current-station" id="currentStation">Esperando...</div>
+            <div class="current-service" id="currentService"></div>
+        </div>
+
+        <!-- Historial de Llamadas -->
+        <div class="queue-section">
+            <h3>Últimas Llamadas</h3>
+            <div class="history-list" id="historyList">
+                <div class="no-tickets">Sin llamadas recientes</div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Estado de Conexion -->
+<div class="connection-status connecting" id="connectionStatus">
+    <span class="status-dot"></span>
+    <span id="statusText">Conectando...</span>
+</div>
+
+<script>
+    // ==========================================
+    // CONFIGURACIÓN DE VIDEOS DE YOUTUBE
+    // ==========================================
+
+    // Lista de IDs de videos de YouTube para rotar
+    // Reemplaza estos con los IDs reales de tus videos
+    const YOUTUBE_VIDEOS = [
+        'Qr61waJ6AZg',  // Video 1 - Ej: 'dQw4w9WgXcQ'
+        'DRtHOo4dbro',  // Video 2
+        'VIDEO_ID_3'   // Video 3
+    ];
+
+    // Tiempo en milisegundos antes de cambiar al siguiente video (5 minutos = 300000)
+    const VIDEO_ROTATION_INTERVAL = 300000;
+
+    // O usa una playlist de YouTube (dejar vacío si usas videos individuales)
+    const YOUTUBE_PLAYLIST_ID = ''; // Ej: 'PLxxxxxxxxxxxxxxx'
+
+    // ==========================================
+    // CONFIGURACIÓN DEL SISTEMA
+    // ==========================================
+
+    const WS_URL = 'ws://munoz.qxpertserver.ingenius.online/api/v1/ws/display?display_type=main';
+    const API_URL = 'http://munoz.qxpertserver.ingenius.online/api/v1';
+
+    let ws = null;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 10;
+    const RECONNECT_DELAY = 3000;
+    let currentVideoIndex = 0;
+
+    let appState = {
+        currentTicket: null,
+        callHistory: []
+    };
+
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', () => {
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        connectWebSocket();
+        initYouTubePlayer();
+    });
+
+    // Inicializar reproductor de YouTube
+    function initYouTubePlayer() {
+        const iframe = document.getElementById('youtubePlayer');
+
+        if (YOUTUBE_PLAYLIST_ID) {
+            // Usar playlist
+            iframe.src = `https://www.youtube.com/embed/videoseries?list=${YOUTUBE_PLAYLIST_ID}&autoplay=1&mute=1&loop=1&controls=0&modestbranding=1&rel=0`;
+        } else if (YOUTUBE_VIDEOS.length > 0 && YOUTUBE_VIDEOS[0] !== 'VIDEO_ID_1') {
+            // Usar rotación de videos individuales
+            loadVideo(0);
+
+            if (YOUTUBE_VIDEOS.length > 1) {
+                setInterval(() => {
+                    currentVideoIndex = (currentVideoIndex + 1) % YOUTUBE_VIDEOS.length;
+                    loadVideo(currentVideoIndex);
+                }, VIDEO_ROTATION_INTERVAL);
+            }
+        }
+    }
+
+    // Cargar un video específico
+    function loadVideo(index) {
+        const iframe = document.getElementById('youtubePlayer');
+        const videoId = YOUTUBE_VIDEOS[index];
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&controls=0&modestbranding=1&rel=0&playlist=${videoId}`;
+    }
+
+    // Actualizar fecha y hora
+    function updateDateTime() {
+        const now = new Date();
+
+        const timeStr = now.toLocaleTimeString('es-PE', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+
+        const dateStr = now.toLocaleDateString('es-PE', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+        document.getElementById('currentTime').textContent = timeStr;
+        document.getElementById('currentDate').textContent = dateStr;
+    }
+
+    // Conexion WebSocket
+    function connectWebSocket() {
+        updateConnectionStatus('connecting');
+
+        try {
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                console.log('WebSocket conectado');
+                reconnectAttempts = 0;
+                updateConnectionStatus('connected');
+            };
+
+            ws.onmessage = function (event) {
+                const message = JSON.parse(event.data);
+                console.log('Mensaje WebSocket recibido:', message);
+
+                switch (message.type) {
+                    case 'ticket_called':
+                        const ticketData = message.data || message;
+                        handleTicketCalled(ticketData);
+                        break;
+
+                    case 'system_alert':
+                        handleSystemAlert(message.data || message);
+                        break;
+
+                    case 'connect':
+                        console.log('Conexión confirmada:', message.connection_id);
+                        break;
+
+                    case 'heartbeat':
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify({type: 'heartbeat'}));
+                        }
+                        break;
+                }
+            };
+
+            ws.onclose = (event) => {
+                console.log('WebSocket desconectado:', event.code, event.reason);
+                updateConnectionStatus('disconnected');
+                attemptReconnect();
+            };
+
+            ws.onerror = (error) => {
+                console.error('Error WebSocket:', error);
+                updateConnectionStatus('disconnected');
+            };
+
+        } catch (error) {
+            console.error('Error creando WebSocket:', error);
+            updateConnectionStatus('disconnected');
+            attemptReconnect();
+        }
+    }
+
+    // Reconexion automatica
+    function attemptReconnect() {
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            reconnectAttempts++;
+            console.log(`Reintentando conexion (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+            setTimeout(connectWebSocket, RECONNECT_DELAY);
+        } else {
+            console.error('Maximo de intentos de reconexion alcanzado');
+            document.getElementById('statusText').textContent = 'Sin conexión';
+        }
+    }
+
+    // Actualizar estado de conexion
+    function updateConnectionStatus(status) {
+        const statusEl = document.getElementById('connectionStatus');
+        const textEl = document.getElementById('statusText');
+
+        statusEl.className = 'connection-status ' + status;
+
+        switch (status) {
+            case 'connected':
+                textEl.textContent = 'Conectado';
+                break;
+            case 'disconnected':
+                textEl.textContent = 'Desconectado';
+                break;
+            case 'connecting':
+                textEl.textContent = 'Conectando...';
+                break;
+        }
+    }
+
+    // Manejar ticket llamado
+    function handleTicketCalled(data) {
+        console.log('=== TICKET LLAMADO ===', data);
+
+        appState.currentTicket = data;
+
+        const panel = document.getElementById('currentTicketPanel');
+        panel.classList.add('calling');
+
+        const ticketNumber = data.ticket_number || data.TicketNumber || data.data?.ticket_number || '---';
+        const stationName = data.station_name || data.StationName || data.data?.station_name || 'Ventanilla';
+        const serviceName = data.service_name || data.ServiceName || data.data?.service_name || '';
+
+        document.getElementById('currentTicketNumber').textContent = ticketNumber;
+        document.getElementById('currentStation').textContent = stationName;
+        document.getElementById('currentService').textContent = serviceName;
+
+        addToHistory({
+            ticket_number: ticketNumber,
+            station_name: stationName
+        });
+
+        playCallSound();
+
+        setTimeout(() => {
+            panel.classList.remove('calling');
+        }, 10000);
+    }
+
+    // Manejar alerta del sistema
+    function handleSystemAlert(data) {
+        console.log('Alerta del sistema:', data);
+
+        if (data.alert_type === 'daily_reset') {
+            appState.currentTicket = null;
+            appState.callHistory = [];
+
+            document.getElementById('currentTicketNumber').textContent = '---';
+            document.getElementById('currentStation').textContent = 'Esperando...';
+            document.getElementById('currentService').textContent = '';
+
+            renderHistory();
+        }
+    }
+
+    // Agregar al historial
+    function addToHistory(data) {
+        const historyItem = {
+            ticketNumber: data.ticket_number || data.TicketNumber,
+            stationName: data.station_name || data.StationName || 'Ventanilla',
+            time: new Date().toLocaleTimeString('es-PE', {hour: '2-digit', minute: '2-digit'})
+        };
+
+        appState.callHistory.unshift(historyItem);
+        appState.callHistory = appState.callHistory.slice(0, 8);
+
+        renderHistory();
+    }
+
+    // Renderizar historial
+    function renderHistory() {
+        const container = document.getElementById('historyList');
+
+        if (appState.callHistory.length === 0) {
+            container.innerHTML = '<div class="no-tickets">Sin llamadas recientes</div>';
+            return;
+        }
+
+        container.innerHTML = appState.callHistory.map(item => `
+            <div class="history-item">
+                <div class="ticket-info">
+                    <span class="ticket-number">${item.ticketNumber}</span>
+                    <span class="station">${item.stationName}</span>
+                </div>
+                <span class="time">${item.time}</span>
+            </div>
+        `).join('');
+    }
+
+    // Reproducir sonido de llamada
+    function playCallSound() {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+
+            setTimeout(() => {
+                const osc2 = audioContext.createOscillator();
+                const gain2 = audioContext.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioContext.destination);
+                osc2.frequency.value = 1000;
+                osc2.type = 'sine';
+                gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                osc2.start(audioContext.currentTime);
+                osc2.stop(audioContext.currentTime + 0.5);
+            }, 200);
+
+        } catch (e) {
+            console.log('Audio no soportado:', e);
+        }
+    }
+</script>
+</body>
+</html>

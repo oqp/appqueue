@@ -1,0 +1,436 @@
+<!-- queue-management.component.html -->
+<div class="queue-management-container">
+  <!-- Header Section -->
+  <mat-card class="header-card">
+    <div class="header-content">
+      <div class="title-section">
+        <h1>
+          <mat-icon>queue</mat-icon>
+          Gestión de Colas
+        </h1>
+        <p class="subtitle">Monitor y control del sistema de colas</p>
+      </div>
+
+      <div class="action-section">
+        <button mat-raised-button
+                color="primary"
+                (click)="loadQueueStates()"
+                [disabled]="isLoading">
+          <mat-icon>refresh</mat-icon>
+          Actualizar
+        </button>
+
+        <button mat-button
+                [color]="autoRefresh ? 'accent' : 'basic'"
+                (click)="toggleAutoRefresh()">
+          <mat-icon>{{autoRefresh ? 'timer' : 'timer_off'}}</mat-icon>
+          Auto-refresh: {{autoRefresh ? 'ON' : 'OFF'}}
+        </button>
+
+        <button mat-button (click)="exportData()">
+          <mat-icon>download</mat-icon>
+          Exportar
+        </button>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="metric">
+          <mat-icon class="metric-icon" style="color: #4477ff;">list</mat-icon>
+          <div class="metric-data">
+            <span class="metric-value">{{summary.TotalQueues}}</span>
+            <span class="metric-label">Colas Totales</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="metric">
+          <mat-icon class="metric-icon" style="color: #22c55e;">play_circle</mat-icon>
+          <div class="metric-data">
+            <span class="metric-value">{{summary.ActiveQueues}}</span>
+            <span class="metric-label">Colas Activas</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="metric">
+          <mat-icon class="metric-icon" style="color: #f59e0b;">people</mat-icon>
+          <div class="metric-data">
+            <span class="metric-value">{{summary.TotalWaiting}}</span>
+            <span class="metric-label">Personas Esperando</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="metric">
+          <mat-icon class="metric-icon" style="color: #ef4444;">computer</mat-icon>
+          <div class="metric-data">
+            <span class="metric-value">{{summary.StationsBusy}}</span>
+            <span class="metric-label">Estaciones Ocupadas</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="metric">
+          <mat-icon class="metric-icon" style="color: #8b5cf6;">schedule</mat-icon>
+          <div class="metric-data">
+            <span class="metric-value">{{formatWaitTime(summary.AverageWaitTime)}}</span>
+            <span class="metric-label">Tiempo Promedio</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Main Content with Tabs -->
+  <mat-card class="content-card">
+    <mat-tab-group [(selectedIndex)]="selectedTab" animationDuration="300ms">
+
+      <!-- Tab 1: Vista de Tabla -->
+      <mat-tab label="Vista de Tabla">
+        <ng-template matTabLabel>
+          <mat-icon class="tab-icon">table_chart</mat-icon>
+          Vista de Tabla
+        </ng-template>
+
+        <div class="tab-content">
+          <!-- Filters -->
+          <div class="filters-section">
+            <form [formGroup]="filterForm" class="filter-form">
+              <mat-form-field appearance="outline">
+                <mat-label>Buscar</mat-label>
+                <input matInput formControlName="searchText" placeholder="Buscar por servicio, estación o ticket">
+                <mat-icon matPrefix>search</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Tipo de Servicio</mat-label>
+                <mat-select formControlName="serviceTypeId">
+                  <mat-option [value]="null">Todos</mat-option>
+                  <mat-option *ngFor="let type of serviceTypes" [value]="type.Id">
+                    {{type.Name}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <button mat-button (click)="clearFilters()" class="clear-filters-btn">
+                <mat-icon>clear</mat-icon>
+                Limpiar Filtros
+              </button>
+            </form>
+          </div>
+
+          <!-- Table -->
+          <div class="table-container">
+            <div *ngIf="isLoading" class="loading-overlay">
+              <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+            </div>
+
+            <table mat-table [dataSource]="dataSource" matSort class="queue-table">
+
+              <!-- Service Column -->
+              <ng-container matColumnDef="service">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Servicio</th>
+                <td mat-cell *matCellDef="let queue">
+                  <div class="service-info">
+                    <div class="service-indicator" [style.background-color]="queue.Color || '#ccc'"></div>
+                    <div>
+                      <div class="service-name">{{queue.ServiceName}}</div>
+                      <div class="service-code">{{queue.ServiceCode}}</div>
+                    </div>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Station Column -->
+              <ng-container matColumnDef="station">
+                <th mat-header-cell *matHeaderCellDef>Estación</th>
+                <td mat-cell *matCellDef="let queue">
+                  <span *ngIf="queue.StationName">
+                    <mat-icon class="station-icon">computer</mat-icon>
+                    {{queue.StationName}}
+                  </span>
+                  <span *ngIf="!queue.StationName" class="text-muted">
+                    Cola General
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Current Ticket Column -->
+              <ng-container matColumnDef="currentTicket">
+                <th mat-header-cell *matHeaderCellDef>Ticket Actual</th>
+                <td mat-cell *matCellDef="let queue">
+                  <div class="ticket-info" *ngIf="queue.CurrentTicketNumber">
+                    <mat-chip [style.background-color]="queue.Color || '#4477ff'">
+                      {{queue.CurrentTicketNumber}}
+                    </mat-chip>
+                  </div>
+                  <span *ngIf="!queue.CurrentTicketNumber" class="text-muted">
+                    Sin atención
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Queue Length Column -->
+              <ng-container matColumnDef="queueLength">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>En Espera</th>
+                <td mat-cell *matCellDef="let queue">
+                  <span [matBadge]="queue.QueueLength"
+                        [matBadgeColor]="queue.QueueLength > 10 ? 'warn' : 'primary'"
+                        [matBadgeHidden]="queue.QueueLength === 0"
+                        matBadgeSize="medium">
+                    <mat-icon>people</mat-icon>
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Average Wait Time Column -->
+              <ng-container matColumnDef="avgWaitTime">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Tiempo Promedio</th>
+                <td mat-cell *matCellDef="let queue">
+                  <div class="wait-time">
+                    <mat-icon class="time-icon">schedule</mat-icon>
+                    {{formatWaitTime(queue.AverageWaitTime)}}
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Estado</th>
+                <td mat-cell *matCellDef="let queue">
+                  <mat-chip [style.background-color]="getStatusColor(queue)" class="status-chip">
+                    <mat-icon>{{getStatusIcon(queue)}}</mat-icon>
+                    {{getStatusLabel(queue)}}
+                  </mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Actions Column -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let queue">
+                  <button mat-icon-button
+                          [matMenuTriggerFor]="menu"
+                          [disabled]="!canManageQueues">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+
+                  <mat-menu #menu="matMenu">
+                    <button mat-menu-item (click)="viewQueueDetails(queue)">
+                      <mat-icon>visibility</mat-icon>
+                      Ver Detalles
+                    </button>
+
+                    <button mat-menu-item
+                            (click)="advanceQueue(queue)"
+                            [disabled]="!queue.IsActive || queue.QueueLength === 0">
+                      <mat-icon>skip_next</mat-icon>
+                      Avanzar Cola
+                    </button>
+
+                    <button mat-menu-item
+                            (click)="updateWaitTime(queue)"
+                            [disabled]="!queue.IsActive">
+                      <mat-icon>update</mat-icon>
+                      Actualizar Tiempo
+                    </button>
+
+                    <mat-divider></mat-divider>
+
+                    <button mat-menu-item
+                            (click)="resetQueue(queue)"
+                            class="danger-action">
+                      <mat-icon>restart_alt</mat-icon>
+                      Reiniciar Cola
+                    </button>
+                  </mat-menu>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                  [class.inactive-row]="!row.IsActive"></tr>
+
+              <!-- No data row -->
+              <tr class="mat-row no-data-row" *matNoDataRow>
+                <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+                  <div class="no-data-message">
+                    <mat-icon>inbox</mat-icon>
+                    <p>No hay colas que mostrar</p>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"
+                           showFirstLastButtons
+                           aria-label="Seleccionar página">
+            </mat-paginator>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Tab 2: Vista de Tarjetas (Colas Activas) -->
+      <mat-tab label="Colas Activas">
+        <ng-template matTabLabel>
+          <mat-icon class="tab-icon">dashboard</mat-icon>
+          Colas Activas
+        </ng-template>
+
+        <div class="tab-content">
+          <div class="active-queues-grid">
+            <mat-card *ngFor="let queue of activeQueues" class="queue-card">
+              <mat-card-header>
+                <div mat-card-avatar
+                     class="queue-avatar"
+                     [style.background-color]="queue.Color || '#4477ff'">
+                  {{queue.TicketPrefix || queue.ServiceCode?.charAt(0)}}
+                </div>
+                <mat-card-title>{{queue.ServiceName}}</mat-card-title>
+                <mat-card-subtitle>
+                  <mat-icon class="inline-icon">computer</mat-icon>
+                  {{queue.StationName || 'Cola General'}}
+                </mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                <div class="queue-card-stats">
+                  <div class="stat">
+                    <span class="stat-label">Ticket Actual</span>
+                    <span class="stat-value ticket-number">
+                      {{queue.CurrentTicketNumber || 'N/A'}}
+                    </span>
+                  </div>
+
+                  <div class="stat">
+                    <span class="stat-label">En Espera</span>
+                    <span class="stat-value">
+                      <mat-icon class="inline-icon">people</mat-icon>
+                      {{queue.QueueLength}}
+                    </span>
+                  </div>
+
+                  <div class="stat">
+                    <span class="stat-label">Tiempo Promedio</span>
+                    <span class="stat-value">
+                      <mat-icon class="inline-icon">schedule</mat-icon>
+                      {{formatWaitTime(queue.AverageWaitTime)}}
+                    </span>
+                  </div>
+                </div>
+
+                <mat-progress-bar mode="determinate"
+                                  [value]="(queue.QueueLength / 20) * 100"
+                                  [color]="queue.QueueLength > 10 ? 'warn' : 'primary'">
+                </mat-progress-bar>
+              </mat-card-content>
+
+              <mat-card-actions *ngIf="canManageQueues">
+                <button mat-button
+                        (click)="advanceQueue(queue)"
+                        [disabled]="queue.QueueLength === 0">
+                  <mat-icon>skip_next</mat-icon>
+                  Avanzar
+                </button>
+                <button mat-button (click)="viewQueueDetails(queue)">
+                  <mat-icon>info</mat-icon>
+                  Detalles
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+
+          <div *ngIf="activeQueues.length === 0" class="no-active-queues">
+            <mat-icon>hourglass_empty</mat-icon>
+            <h3>No hay colas activas en este momento</h3>
+            <p>Las colas aparecerán aquí cuando haya personas esperando</p>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Tab 3: Estadísticas -->
+      <mat-tab label="Estadísticas">
+        <ng-template matTabLabel>
+          <mat-icon class="tab-icon">analytics</mat-icon>
+          Estadísticas
+        </ng-template>
+
+        <div class="tab-content">
+          <div class="stats-container">
+            <!-- Service Type Distribution -->
+            <mat-card class="stats-card">
+              <mat-card-header>
+                <mat-card-title>Distribución por Servicio</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="service-stats">
+                  <div *ngFor="let service of serviceTypes" class="service-stat-item">
+                    <div class="service-stat-header">
+                      <span class="service-name">{{service.Name}}</span>
+                      <span class="queue-count">
+                        {{getQueueCountByService(service.Id)}} personas
+                      </span>
+                    </div>
+                    <mat-progress-bar mode="determinate"
+                                      [value]="getServiceLoadPercentage(service.Id)"
+                                      [color]="getServiceLoadPercentage(service.Id) > 70 ? 'warn' : 'primary'">
+                    </mat-progress-bar>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Time Analysis -->
+            <mat-card class="stats-card">
+              <mat-card-header>
+                <mat-card-title>Análisis de Tiempos</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="time-stats">
+                  <div class="time-stat">
+                    <mat-icon>timer</mat-icon>
+                    <div>
+                      <div class="time-value">{{getMinWaitTime()}}</div>
+                      <div class="time-label">Tiempo Mínimo</div>
+                    </div>
+                  </div>
+                  <div class="time-stat">
+                    <mat-icon>av_timer</mat-icon>
+                    <div>
+                      <div class="time-value">{{formatWaitTime(summary.AverageWaitTime)}}</div>
+                      <div class="time-label">Tiempo Promedio</div>
+                    </div>
+                  </div>
+                  <div class="time-stat">
+                    <mat-icon>hourglass_full</mat-icon>
+                    <div>
+                      <div class="time-value">{{getMaxWaitTime()}}</div>
+                      <div class="time-label">Tiempo Máximo</div>
+                    </div>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card>
+</div>

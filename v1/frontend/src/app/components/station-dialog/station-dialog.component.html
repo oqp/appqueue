@@ -1,0 +1,148 @@
+<!-- station-dialog.component.html -->
+<div class="station-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon>{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
+    {{ dialogTitle }}
+  </h2>
+
+  <mat-divider></mat-divider>
+
+  <mat-dialog-content>
+    <form [formGroup]="stationForm" class="station-form">
+
+      <!-- Primera fila: Código y Nombre -->
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field-half">
+          <mat-label>Código</mat-label>
+          <input
+            matInput
+            formControlName="Code"
+            placeholder="Ej: VA01"
+            [readonly]="isEdit"
+            style="text-transform: uppercase;">
+          <mat-icon matPrefix>qr_code</mat-icon>
+          <mat-hint>Código único de la estación</mat-hint>
+          <mat-error>{{ getErrorMessage('Code') }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-half">
+          <mat-label>Nombre</mat-label>
+          <input
+            matInput
+            formControlName="Name"
+            placeholder="Ej: Ventanilla Análisis 1">
+          <mat-icon matPrefix>badge</mat-icon>
+          <mat-error>{{ getErrorMessage('Name') }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Segunda fila: Descripción -->
+      <mat-form-field appearance="outline" class="form-field-full">
+        <mat-label>Descripción</mat-label>
+        <textarea
+          matInput
+          formControlName="Description"
+          placeholder="Descripción de la estación"
+          rows="2"></textarea>
+        <mat-icon matPrefix>description</mat-icon>
+        <mat-hint align="end">{{ stationForm.get('Description')?.value?.length || 0 }}/200</mat-hint>
+        <mat-error>{{ getErrorMessage('Description') }}</mat-error>
+      </mat-form-field>
+
+      <!-- Tercera fila: Tipo de Servicio y Ubicación -->
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field-half">
+          <mat-label>Tipo de Servicio</mat-label>
+          <mat-select formControlName="ServiceTypeId">
+            <mat-option [value]="null">
+              <em>Seleccione un servicio</em>
+            </mat-option>
+            <mat-option *ngFor="let type of data.serviceTypes" [value]="type.Id">
+              <mat-icon class="option-icon">{{ getServiceIcon(type.Name) }}</mat-icon>
+              {{ type.Name }}
+            </mat-option>
+          </mat-select>
+          <mat-icon matPrefix>medical_services</mat-icon>
+          <mat-error>{{ getErrorMessage('ServiceTypeId') }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-half">
+          <mat-label>Ubicación</mat-label>
+          <input
+            matInput
+            formControlName="Location"
+            placeholder="Ej: Planta Baja, Ala Norte">
+          <mat-icon matPrefix>location_on</mat-icon>
+          <mat-error>{{ getErrorMessage('Location') }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Cuarta fila: Estado y Activo -->
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field-half">
+          <mat-label>Estado Inicial</mat-label>
+          <mat-select formControlName="Status">
+            <mat-option value="Available">
+              <mat-icon class="status-icon available">check_circle</mat-icon>
+              Disponible
+            </mat-option>
+            <mat-option value="Maintenance">
+              <mat-icon class="status-icon maintenance">build</mat-icon>
+              Mantenimiento
+            </mat-option>
+            <mat-option value="Offline">
+              <mat-icon class="status-icon offline">cancel</mat-icon>
+              Fuera de línea
+            </mat-option>
+          </mat-select>
+          <mat-icon matPrefix>info</mat-icon>
+          <mat-error>{{ getErrorMessage('Status') }}</mat-error>
+        </mat-form-field>
+
+        <div class="form-field-half toggle-container">
+          <mat-slide-toggle formControlName="IsActive" color="primary">
+            <span class="toggle-label">
+              {{ stationForm.get('IsActive')?.value ? 'Estación Activa' : 'Estación Inactiva' }}
+            </span>
+          </mat-slide-toggle>
+          <mat-hint class="toggle-hint">
+            Las estaciones inactivas no aparecen en las listas de selección
+          </mat-hint>
+        </div>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+
+  <mat-divider></mat-divider>
+
+  <mat-dialog-actions align="end">
+    <button
+      mat-button
+      (click)="onCancel()"
+      [disabled]="loading">
+      {{ isViewOnly ? 'Cerrar' : 'Cancelar' }}
+    </button>
+
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="onSubmit()"
+      *ngIf="!isViewOnly"
+      [disabled]="stationForm.invalid || loading">
+
+      <mat-spinner
+        *ngIf="loading"
+        diameter="20"
+        style="display: inline-block; margin-right: 8px;">
+      </mat-spinner>
+
+      <mat-icon *ngIf="!loading">
+        {{ isEdit ? 'save' : 'add' }}
+      </mat-icon>
+
+      {{ submitButtonText }}
+    </button>
+  </mat-dialog-actions>
+</div>
+

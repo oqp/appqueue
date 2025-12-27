@@ -1,0 +1,713 @@
+// queue-management.component.scss
+
+.queue-management-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease-in;
+}
+
+// Header Card
+.header-card {
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(68, 119, 255, 0.1) 0%, rgba(59, 103, 231, 0.05) 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 16px;
+    }
+  }
+
+  .title-section {
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 600;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: #4477ff;
+      }
+    }
+
+    .subtitle {
+      margin: 4px 0 0 44px;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+
+  .action-section {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+
+    @media (max-width: 480px) {
+      flex-direction: column;
+      width: 100%;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(68, 119, 255, 0.1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(68, 119, 255, 0.15);
+  }
+
+  mat-card-content {
+    padding: 16px !important;
+  }
+
+  .metric {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .metric-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      opacity: 0.9;
+    }
+
+    .metric-data {
+      display: flex;
+      flex-direction: column;
+
+      .metric-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1a1a1a;
+        line-height: 1.2;
+      }
+
+      .metric-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 2px;
+      }
+    }
+  }
+}
+
+// Content Card
+.content-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+
+  ::ng-deep {
+    .mat-mdc-tab-group {
+      .mat-mdc-tab-list {
+        background: linear-gradient(135deg, rgba(68, 119, 255, 0.05) 0%, rgba(59, 103, 231, 0.02) 100%);
+
+        .mat-mdc-tab {
+          min-width: 140px;
+
+          .mat-mdc-tab-label-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .tab-icon {
+              font-size: 20px;
+              width: 20px;
+              height: 20px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.tab-content {
+  padding: 24px;
+  min-height: 400px;
+}
+
+// Filters Section
+.filters-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+
+  .filter-form {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    mat-form-field {
+      flex: 1;
+      min-width: 200px;
+      max-width: 300px;
+    }
+
+    .clear-filters-btn {
+      margin-top: 8px;
+    }
+  }
+}
+
+// Table Container
+.table-container {
+  position: relative;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+}
+
+// Queue Table
+.queue-table {
+  width: 100%;
+
+  .mat-mdc-header-row {
+    background: #f8f9fa;
+  }
+
+  .mat-mdc-row {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background: rgba(68, 119, 255, 0.02);
+    }
+
+    &.inactive-row {
+      opacity: 0.6;
+      background: #fafafa;
+    }
+  }
+
+  // Service Column
+  .service-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .service-indicator {
+      width: 4px;
+      height: 32px;
+      border-radius: 2px;
+    }
+
+    .service-name {
+      font-weight: 500;
+      color: #1a1a1a;
+    }
+
+    .service-code {
+      font-size: 12px;
+      color: #666;
+    }
+  }
+
+  // Station Column
+  .station-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    vertical-align: middle;
+    color: #666;
+  }
+
+  // Ticket Column
+  .ticket-info {
+    mat-chip {
+      font-weight: 600;
+      color: white;
+      font-size: 14px;
+    }
+  }
+
+  // Wait Time Column
+  .wait-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .time-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: #666;
+    }
+  }
+
+  // Status Column
+  .status-chip {
+    font-size: 12px;
+    height: 28px;
+    color: white;
+    font-weight: 500;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+  }
+
+  // No Data Row
+  .no-data-row {
+    .no-data-message {
+      padding: 48px;
+      text-align: center;
+      color: #999;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: #ddd;
+        margin-bottom: 16px;
+      }
+
+      p {
+        margin: 0;
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+// Active Queues Grid
+.active-queues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.queue-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(68, 119, 255, 0.1);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(68, 119, 255, 0.15);
+  }
+
+  .queue-avatar {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+    border-radius: 8px;
+  }
+
+  mat-card-header {
+    padding-bottom: 8px;
+  }
+
+  mat-card-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  mat-card-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #666;
+
+    .inline-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .queue-card-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 16px 0;
+
+    .stat {
+      text-align: center;
+
+      .stat-label {
+        display: block;
+        font-size: 11px;
+        color: #999;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+
+      .stat-value {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+
+        &.ticket-number {
+          color: #4477ff;
+          font-size: 20px;
+        }
+
+        .inline-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          margin-right: 4px;
+          color: #666;
+        }
+      }
+    }
+  }
+
+  mat-progress-bar {
+    margin: 16px 0;
+    border-radius: 4px;
+    height: 6px;
+  }
+
+  mat-card-actions {
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #f0f0f0;
+
+    button {
+      flex: 1;
+    }
+  }
+}
+
+// No Active Queues
+.no-active-queues {
+  padding: 80px 40px;
+  text-align: center;
+  color: #999;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #ddd;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    color: #666;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+// Statistics Container
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stats-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  mat-card-header {
+    padding-bottom: 8px;
+  }
+
+  mat-card-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  // Service Stats
+  .service-stats {
+    .service-stat-item {
+      margin-bottom: 20px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .service-stat-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+
+        .service-name {
+          font-weight: 500;
+          color: #1a1a1a;
+        }
+
+        .queue-count {
+          color: #666;
+          font-size: 14px;
+        }
+      }
+
+      mat-progress-bar {
+        height: 8px;
+        border-radius: 4px;
+      }
+    }
+  }
+
+  // Time Stats
+  .time-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
+
+    .time-stat {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: #4477ff;
+        opacity: 0.8;
+      }
+
+      .time-value {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1a1a1a;
+      }
+
+      .time-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 2px;
+      }
+    }
+  }
+}
+
+// Utility Classes
+.text-muted {
+  color: #999;
+  font-style: italic;
+}
+
+.inline-icon {
+  vertical-align: middle;
+}
+
+.danger-action {
+  color: #ef4444 !important;
+
+  mat-icon {
+    color: inherit;
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Material Overrides
+::ng-deep {
+  .mat-mdc-form-field-appearance-outline {
+    .mat-mdc-form-field-flex {
+      height: 48px;
+    }
+
+    .mat-mdc-text-field-wrapper {
+      background: white;
+    }
+  }
+
+  .mat-mdc-paginator {
+    background: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .mat-mdc-menu-panel {
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .mat-badge-content {
+    font-weight: 600;
+  }
+
+  // Snackbar styles
+  .success-snackbar {
+    background: #22c55e;
+    color: white;
+
+    .mat-mdc-button {
+      color: white;
+    }
+  }
+
+  .error-snackbar {
+    background: #ef4444;
+    color: white;
+
+    .mat-mdc-button {
+      color: white;
+    }
+  }
+
+  .warning-snackbar {
+    background: #f59e0b;
+    color: white;
+
+    .mat-mdc-button {
+      color: white;
+    }
+  }
+
+  .info-snackbar {
+    background: #4477ff;
+    color: white;
+
+    .mat-mdc-button {
+      color: white;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .queue-management-container {
+    padding: 16px;
+  }
+
+  .header-card {
+    .title-section {
+      h1 {
+        font-size: 24px;
+      }
+    }
+  }
+
+  .tab-content {
+    padding: 16px;
+  }
+
+  .filters-section {
+    .filter-form {
+      flex-direction: column;
+
+      mat-form-field {
+        max-width: 100%;
+      }
+    }
+  }
+}
+
+// Print styles
+@media print {
+  .header-card .action-section,
+  .filters-section,
+  mat-paginator,
+  .mat-mdc-tab-list,
+  mat-card-actions,
+  button {
+    display: none !important;
+  }
+
+  .queue-management-container {
+    padding: 0;
+  }
+
+  .queue-table {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}

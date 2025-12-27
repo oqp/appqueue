@@ -1,0 +1,1030 @@
+// Estilos para modo kiosko
+:host.kiosk-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999; // Asegurar que esté por encima de todo
+  background: white;
+  overflow: auto;
+}
+
+.ticket-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10000; // Mayor z-index que el sidebar
+
+  // En modo kiosko, ocupar toda la pantalla
+  :host.kiosk-mode & {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 40px;
+    overflow-y: auto;
+  }
+}
+
+// Overlay para bloquear interacciones con elementos debajo
+.kiosk-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.01);
+  z-index: 9998;
+  pointer-events: all;
+}
+
+
+// Variables para pantalla táctil vertical Full HD
+$header-height: 120px;
+$primary-color: #1976d2;
+$success-color: #4caf50;
+$warn-color: #ff9800;
+$error-color: #f44336;
+$card-padding: 24px;
+$button-height: 80px;
+$font-size-large: 24px;
+$font-size-xlarge: 32px;
+$font-size-xxlarge: 48px;
+
+.ticket-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Roboto', sans-serif;
+
+  // Optimizado para pantalla vertical 1080x1920
+  @media (orientation: portrait) and (min-height: 1900px) {
+    padding: 40px;
+  }
+}
+
+// Encabezado
+.header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+  animation: fadeInDown 0.5s ease-out;
+
+  .header-icon {
+    font-size: 64px;
+    height: 64px;
+    width: 64px;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: $font-size-xlarge;
+    font-weight: 500;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  }
+
+  h2 {
+    margin: 5px 0 0 0;
+    font-size: $font-size-large;
+    font-weight: 300;
+    opacity: 0.95;
+  }
+}
+
+// Sección de búsqueda
+.search-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  animation: fadeIn 0.6s ease-out;
+  padding: 20px;
+
+  .search-card {
+    width: 100%;
+    max-width: 600px;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    margin-bottom: 40px; // Espacio entre card y teclado
+
+    h2 {
+      text-align: center;
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .document-field {
+      width: 100%;
+
+      .large-input {
+        font-size: 32px;
+        text-align: center;
+        letter-spacing: 3px;
+        padding: 20px;
+        height: 80px;
+        background: #f5f5f5;
+        cursor: default;
+      }
+
+      ::ng-deep .mat-mdc-form-field-wrapper {
+        padding-bottom: 0;
+      }
+
+      ::ng-deep .mdc-text-field--outlined {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-width: 2px;
+          border-color: #e0e0e0;
+        }
+      }
+
+      ::ng-deep .mat-mdc-form-field-label {
+        font-size: 20px;
+      }
+    }
+  }
+
+  // Teclado numérico circular
+  .numeric-keyboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+
+    .keyboard-row {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+
+      &.special-row {
+        gap: 30px;
+      }
+    }
+
+    .key-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid white;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      font-size: 32px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+
+      &:hover {
+        background: white;
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      }
+
+      &:active {
+        transform: scale(0.95);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+
+      &.key-clear {
+        background: rgba(239, 83, 80, 0.9);
+        color: white;
+        border-color: #ef5350;
+
+        &:hover {
+          background: #ef5350;
+        }
+      }
+
+      &.key-backspace {
+        background: rgba(255, 193, 7, 0.9);
+        color: white;
+        border-color: #ffc107;
+
+        &:hover {
+          background: #ffc107;
+        }
+      }
+    }
+
+    .search-button {
+      margin-top: 20px;
+      width: 300px;
+      height: 60px;
+      font-size: 20px;
+      font-weight: 500;
+      border-radius: 30px;
+      box-shadow: 0 4px 15px rgba(25, 118, 210, 0.4);
+
+      mat-icon {
+        margin-right: 10px;
+        font-size: 24px;
+      }
+    }
+  }
+}
+
+// Responsive para pantallas táctiles grandes
+@media (orientation: portrait) and (min-height: 1900px) {
+  .search-section {
+    .search-card {
+      max-width: 700px;
+      padding: 50px;
+
+      h2 {
+        font-size: 36px;
+      }
+
+      .document-field .large-input {
+        font-size: 42px;
+        height: 100px;
+      }
+    }
+
+    .numeric-keyboard {
+      gap: 30px;
+      padding: 30px;
+
+      .keyboard-row {
+        gap: 40px;
+      }
+
+      .key-circle {
+        width: 100px;
+        height: 100px;
+        font-size: 42px;
+        border-width: 4px;
+
+        mat-icon {
+          font-size: 36px;
+          width: 36px;
+          height: 36px;
+        }
+      }
+
+      .search-button {
+        width: 400px;
+        height: 80px;
+        font-size: 26px;
+
+        mat-icon {
+          font-size: 30px;
+        }
+      }
+    }
+  }
+}
+
+// Animación de pulsación para los botones
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(255, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+.key-circle:focus {
+  animation: pulse 0.5s;
+}
+
+// Formulario de registro
+.registration-section {
+  animation: slideInUp 0.4s ease-out;
+
+  .registration-card {
+    max-width: 900px;
+    margin: 0 auto;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    padding: $card-padding;
+
+    mat-card-header {
+      margin-bottom: 30px;
+
+      mat-card-title {
+        display: flex;
+        align-items: center;
+        font-size: $font-size-large;
+
+        mat-icon {
+          margin-right: 15px;
+          font-size: 36px;
+          height: 36px;
+          width: 36px;
+        }
+      }
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      mat-form-field {
+        width: 100%;
+
+        ::ng-deep .mat-form-field-label {
+          font-size: 18px;
+        }
+
+        ::ng-deep input, ::ng-deep .mat-select-value {
+          font-size: 20px;
+        }
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+
+      button {
+        flex: 1;
+        height: 70px;
+        font-size: 20px;
+        border-radius: 12px;
+
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+
+      .cancel-button {
+        background-color: #f5f5f5;
+        color: #666;
+      }
+    }
+  }
+}
+
+// Sección de paciente y servicios
+// Actualizar la sección .patient-services-section
+.patient-services-section {
+  animation: fadeIn 0.5s ease-out;
+
+  .patient-info-card {
+    max-width: 900px;
+    margin: 0 auto 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    padding: 24px;
+
+    mat-card-header {
+      mat-card-title {
+        display: flex;
+        align-items: center;
+        font-size: 24px;
+        color: $primary-color;
+        margin-bottom: 20px;
+
+        mat-icon {
+          margin-right: 15px;
+          font-size: 36px;
+          height: 36px;
+          width: 36px;
+        }
+      }
+    }
+
+    .patient-details {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        font-size: 20px;
+        border-bottom: 1px solid #e0e0e0;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        // Estilos para filas con texto más grande
+        &.detail-row-large {
+          padding: 20px 0;
+
+          .label {
+            font-weight: 600;
+            color: #555;
+            font-size: 24px;
+          }
+
+          .value {
+            font-weight: 500;
+            color: #222;
+            font-size: 28px;
+            text-align: right;
+          }
+        }
+
+        .label {
+          font-weight: 500;
+          color: #666;
+        }
+
+        .value {
+          font-weight: 400;
+          color: #333;
+        }
+      }
+    }
+
+    .new-search-button {
+      width: 100%;
+      height: 60px;
+      font-size: 18px;
+      border-radius: 12px;
+    }
+  }
+}
+
+// Agregar estilos específicos para pantalla vertical (touchscreen)
+@media (orientation: portrait) and (min-height: 1900px) {
+  .search-section {
+    .search-card {
+      max-width: 600px;
+      padding: 60px;
+
+      h2 {
+        font-size: 42px;
+        margin-bottom: 50px;
+      }
+    }
+  }
+  .patient-services-section {
+    .patient-info-card {
+      .patient-details {
+        padding: 40px;
+
+        .detail-row.detail-row-large {
+          padding: 25px 0;
+
+          .label {
+            font-size: 32px;
+          }
+
+          .value {
+            font-size: 36px;
+          }
+        }
+      }
+
+      .new-search-button {
+        height: 80px;
+        font-size: 22px;
+
+        mat-icon {
+          font-size: 28px;
+          height: 28px;
+          width: 28px;
+          margin-right: 10px;
+        }
+      }
+    }
+  }
+
+  .services-section {
+    .services-title {
+      font-size: 40px;
+      margin-bottom: 50px;
+    }
+
+    .services-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
+
+      .service-button {
+        height: 240px;
+
+        .service-icon {
+          font-size: 72px;
+          height: 72px;
+          width: 72px;
+          margin-bottom: 20px;
+        }
+
+        .service-name {
+          font-size: 36px;
+          margin-bottom: 15px;
+        }
+
+        .service-time {
+          font-size: 24px;
+
+          mat-icon {
+            font-size: 24px;
+            height: 24px;
+            width: 24px;
+          }
+        }
+      }
+    }
+  }
+}
+
+
+// Grid de servicios
+.services-section {
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .services-title {
+    text-align: center;
+    font-size: $font-size-xlarge;
+    color: white;
+    margin-bottom: 40px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+
+    .service-button {
+      height: 180px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.3s ease;
+      background: white !important;
+      color: $primary-color !important;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .service-icon {
+        font-size: 48px;
+        height: 48px;
+        width: 48px;
+        margin-bottom: 15px;
+      }
+
+      .service-name {
+        font-size: 24px;
+        font-weight: 500;
+        margin-bottom: 10px;
+        text-align: center;
+        line-height: 1.2;
+      }
+
+      .service-time {
+        display: flex;
+        align-items: center;
+        font-size: 18px;
+        opacity: 0.8;
+
+        mat-icon {
+          font-size: 20px;
+          height: 20px;
+          width: 20px;
+          margin-right: 5px;
+        }
+      }
+    }
+  }
+}
+
+// Overlay del ticket
+.ticket-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+
+  .ticket-dialog {
+    background: white;
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 700px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: slideInUp 0.4s ease-out;
+
+    .ticket-header {
+      text-align: center;
+      margin-bottom: 30px;
+
+      .success-icon {
+        font-size: 80px;
+        height: 80px;
+        width: 80px;
+        color: $success-color;
+        margin-bottom: 15px;
+      }
+
+      h2 {
+        font-size: 28px;
+        color: #333;
+        margin: 0;
+      }
+    }
+
+    .ticket-content {
+      .ticket-number {
+        text-align: center;
+        background: linear-gradient(135deg, $primary-color, #1565c0);
+        color: white;
+        padding: 30px;
+        border-radius: 16px;
+        margin-bottom: 30px;
+
+        .label {
+          display: block;
+          font-size: 24px;
+          margin-bottom: 10px;
+          opacity: 0.9;
+        }
+
+        .number {
+          display: block;
+          font-size: 72px;
+          font-weight: bold;
+          letter-spacing: 4px;
+        }
+      }
+
+      .ticket-details {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+
+        .ticket-row {
+          display: flex;
+          align-items: center;
+          padding: 12px 0;
+          font-size: 18px;
+          border-bottom: 1px solid #e0e0e0;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          mat-icon {
+            margin-right: 15px;
+            color: $primary-color;
+            font-size: 24px;
+            height: 24px;
+            width: 24px;
+          }
+
+          .label {
+            font-weight: 500;
+            color: #666;
+            margin-right: 10px;
+          }
+
+          .value {
+            flex: 1;
+            text-align: right;
+            font-weight: 400;
+            color: #333;
+          }
+        }
+      }
+
+      .ticket-instructions {
+        display: flex;
+        align-items: center;
+        background: #fff3e0;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+
+        mat-icon {
+          font-size: 32px;
+          height: 32px;
+          width: 32px;
+          color: $warn-color;
+          margin-right: 15px;
+        }
+
+        p {
+          margin: 0;
+          font-size: 18px;
+          color: #333;
+        }
+      }
+    }
+
+    .ticket-actions {
+      display: flex;
+      gap: 20px;
+
+      button {
+        flex: 1;
+        height: 70px;
+        font-size: 20px;
+        border-radius: 12px;
+
+        mat-icon {
+          margin-right: 10px;
+        }
+      }
+
+      .close-button {
+        background: #f5f5f5;
+        color: #666;
+      }
+    }
+  }
+}
+
+// Loading overlay
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+
+  p {
+    color: white;
+    font-size: 24px;
+    margin-top: 20px;
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive para pantalla táctil vertical
+@media (orientation: portrait) and (min-height: 1900px) {
+  .search-card {
+    padding: 60px !important;
+
+    .document-field .large-input {
+      height: 120px;
+      font-size: 48px;
+    }
+
+    .search-button {
+      height: 100px;
+      font-size: 32px;
+    }
+  }
+
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+
+    .service-button {
+      height: 220px;
+
+      .service-icon {
+        font-size: 64px;
+        height: 64px;
+        width: 64px;
+      }
+
+      .service-name {
+        font-size: 32px;
+      }
+    }
+  }
+}
+
+// Helper para obtener iconos de servicios
+// (Esto se maneja en el componente TS)
+// Estilos globales para SnackBar (agregar al final del archivo SCSS)
+::ng-deep {
+  .mat-mdc-snack-bar-container {
+    &.warning-snackbar {
+      --mdc-snackbar-container-color: #ff9800;
+      --mdc-snackbar-supporting-text-color: white;
+    }
+
+    &.info-snackbar {
+      --mdc-snackbar-container-color: #2196f3;
+      --mdc-snackbar-supporting-text-color: white;
+    }
+
+    &.error-snackbar {
+      --mdc-snackbar-container-color: #f44336;
+      --mdc-snackbar-supporting-text-color: white;
+    }
+
+    &.success-snackbar {
+      --mdc-snackbar-container-color: #4caf50;
+      --mdc-snackbar-supporting-text-color: white;
+    }
+  }
+}
+
+.exit-kiosk-button {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 10001;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  opacity: 0.3;
+  transition: opacity 0.3s;
+
+  &:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// Estilos para el control de pantalla completa
+.fullscreen-control {
+  text-align: center;
+  margin-bottom: 20px;
+  animation: pulse 2s infinite;
+
+  .fullscreen-button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid white;
+    padding: 15px 30px;
+    font-size: 18px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+
+    mat-icon {
+      margin-right: 10px;
+      font-size: 24px;
+      vertical-align: middle;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+  }
+}
+
+// Animación de pulse para llamar la atención
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Logo del laboratorio en el card
+
+  .logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+
+    .logo-inicio {
+      //max-width: 300px;
+      width: 410px;
+      height: auto;
+      display: inline-block;
+      animation: fadeIn 1s ease-out;
+    }
+  }
+
+
+// Logo Ingenius en esquina inferior derecha
+.logo-ingenius-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  .logo-ingenius {
+    max-width: 120px;
+    height: auto;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  }
+}
+
+// Ajustes para pantallas grandes
+@media (orientation: portrait) and (min-height: 1900px) {
+
+    .logo-container {
+      margin-bottom: 30px;
+
+      .logo-inicio {
+        max-width: 350px;
+      }
+
+  }
+
+  .logo-ingenius-container {
+    bottom: 30px;
+    right: 30px;
+
+    .logo-ingenius {
+      max-width: 80px;
+    }
+  }
+}
+
+// Para modo kiosko, asegurar que el logo Ingenius esté visible
+:host.kiosk-mode {
+  .logo-ingenius-container {
+    position: fixed;
+    z-index: 100;
+  }
+}

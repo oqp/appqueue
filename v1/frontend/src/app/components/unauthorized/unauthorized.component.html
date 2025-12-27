@@ -1,0 +1,217 @@
+<!-- unauthorized.component.html -->
+<div class="unauthorized-container">
+  <!-- Background Effect -->
+  <div class="background-pattern"></div>
+
+  <!-- Main Card -->
+  <mat-card class="error-card" [ngClass]="cardAnimation">
+    <!-- Header -->
+    <div class="error-header">
+      <div class="error-icon-container" [ngClass]="iconAnimation">
+        <mat-icon class="error-icon">block</mat-icon>
+        <div class="error-code">403</div>
+      </div>
+      <h1 class="error-title">Acceso Denegado</h1>
+      <p class="error-subtitle">No tiene permisos para acceder a esta sección</p>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- User Information -->
+    <mat-card-content>
+      <div class="user-info-section">
+        <div class="user-card">
+          <mat-icon class="user-avatar" [style.color]="getRoleColor(userRole)">
+            {{ getRoleIcon(userRole) }}
+          </mat-icon>
+          <div class="user-details">
+            <h3 class="user-name">{{ userName }}</h3>
+            <span class="user-role" [style.color]="getRoleColor(userRole)">
+              {{ userRole }}
+            </span>
+          </div>
+        </div>
+
+        <div class="attempted-access" *ngIf="attemptedUrl">
+          <mat-icon>route</mat-icon>
+          <span>Intentó acceder a: <code>{{ attemptedUrl }}</code></span>
+        </div>
+      </div>
+
+      <!-- Access Requirements -->
+      <div class="requirements-section">
+        <h3 class="section-title">
+          <mat-icon>security</mat-icon>
+          Niveles de Acceso Requeridos
+        </h3>
+
+        <div class="requirements-grid">
+          <div class="requirement-card"
+               *ngFor="let req of accessRequirements"
+               [class.accessible]="isAccessible(req)">
+            <mat-icon class="requirement-icon">{{ req.icon }}</mat-icon>
+            <div class="requirement-content">
+              <h4>{{ req.title }}</h4>
+              <p>{{ req.description }}</p>
+              <div class="required-roles">
+                <span class="role-chip" *ngFor="let role of req.roles">
+                  {{ role }}
+                </span>
+              </div>
+            </div>
+            <mat-icon class="status-icon" *ngIf="isAccessible(req)">
+              check_circle
+            </mat-icon>
+            <mat-icon class="status-icon" *ngIf="!isAccessible(req)">
+              cancel
+            </mat-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Available Routes -->
+      <mat-expansion-panel class="routes-panel" *ngIf="availableRoutes.length > 0">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>check_circle</mat-icon>
+            Secciones Disponibles para Usted ({{ availableRoutes.length }})
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="routes-list">
+          <button mat-stroked-button
+                  class="route-button available"
+                  *ngFor="let route of availableRoutes"
+                  (click)="navigateTo(route.path)"
+                  [matTooltip]="route.description">
+            <mat-icon>{{ route.icon }}</mat-icon>
+            {{ route.label }}
+          </button>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Restricted Routes -->
+      <mat-expansion-panel class="routes-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>lock</mat-icon>
+            Secciones Restringidas ({{ restrictedRoutes.length }})
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="routes-list">
+          <div class="route-item restricted" *ngFor="let route of restrictedRoutes">
+            <mat-icon>{{ route.icon }}</mat-icon>
+            <div class="route-info">
+              <span class="route-label">{{ route.label }}</span>
+              <span class="route-requirement">
+                Requiere: {{ getRouteRequirementsText(route) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Actions -->
+      <div class="actions-section">
+        <button mat-raised-button
+                color="primary"
+                (click)="goHome()"
+                class="action-button">
+          <mat-icon>home</mat-icon>
+          Ir al Inicio
+        </button>
+
+        <button mat-raised-button
+                (click)="goBack()"
+                class="action-button">
+          <mat-icon>arrow_back</mat-icon>
+          Volver Atrás
+        </button>
+
+        <button mat-raised-button
+                color="warn"
+                (click)="logout()"
+                class="action-button"
+                *ngIf="currentUser">
+          <mat-icon>logout</mat-icon>
+          Cerrar Sesión
+        </button>
+      </div>
+
+      <!-- Auto Redirect -->
+      <div class="auto-redirect" *ngIf="autoRedirectEnabled">
+        <mat-progress-bar mode="determinate"
+                          [value]="(redirectCountdown / 10) * 100"
+                          color="primary">
+        </mat-progress-bar>
+        <p class="redirect-text">
+          Será redirigido automáticamente en {{ redirectCountdown }} segundos...
+          <button mat-button (click)="cancelAutoRedirect()">Cancelar</button>
+        </p>
+      </div>
+
+      <!-- Support Section -->
+      <div class="support-section">
+        <mat-divider></mat-divider>
+
+        <h3 class="section-title">
+          <mat-icon>help_outline</mat-icon>
+          ¿Necesita Ayuda?
+        </h3>
+
+        <div class="support-content">
+          <p class="support-text">
+            Si cree que debería tener acceso a esta sección, contacte al administrador del sistema
+            o al departamento de soporte técnico.
+          </p>
+
+          <div class="support-info">
+            <div class="support-item">
+              <mat-icon>email</mat-icon>
+              <div>
+                <strong>Email:</strong>
+                <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+                <button mat-icon-button (click)="copyEmail()" matTooltip="Copiar email">
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="support-item">
+              <mat-icon>phone</mat-icon>
+              <div>
+                <strong>Teléfono:</strong>
+                <span>{{ supportPhone }}</span>
+              </div>
+            </div>
+
+            <div class="support-item">
+              <mat-icon>schedule</mat-icon>
+              <div>
+                <strong>Horario:</strong>
+                <span>{{ supportHours }}</span>
+              </div>
+            </div>
+          </div>
+
+          <button mat-stroked-button
+                  color="primary"
+                  (click)="contactSupport()"
+                  class="contact-button">
+            <mat-icon>mail_outline</mat-icon>
+            Solicitar Acceso
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Additional Info -->
+  <div class="additional-info">
+    <p>
+      <mat-icon>info</mat-icon>
+      Los permisos son asignados por el administrador del sistema según su rol y responsabilidades.
+    </p>
+  </div>
+</div>

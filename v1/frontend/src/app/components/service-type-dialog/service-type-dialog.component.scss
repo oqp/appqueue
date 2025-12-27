@@ -1,0 +1,375 @@
+// service-type-dialog.component.scss
+.service-type-dialog {
+  min-width: 900px;  // Aumentado de 800px
+  max-width: 1200px;  // Aumentado de 900px
+
+  @media (max-width: 1024px) {
+    min-width: 95vw;  // Casi todo el ancho en tablets
+  }
+
+  @media (max-width: 768px) {
+    min-width: 100vw;  // Todo el ancho en móviles
+  }
+}
+
+// Dialog header
+.mat-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0;
+  padding: 24px 24px 16px;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: #667eea;
+  }
+}
+
+// Dialog content
+.mat-dialog-content {
+  padding: 24px !important;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+// Form styles
+.service-type-form {
+  width: 100%;
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 8px;
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+
+  .form-field-half {
+    flex: 1;
+
+    @media (max-width: 600px) {
+      width: 100%;
+    }
+  }
+
+  .form-field-full {
+    width: 100%;
+  }
+
+  // Mat form field customization
+  .mat-form-field {
+    width: 100%;
+
+    .mat-icon {
+      margin-right: 8px;
+    }
+  }
+
+  // Section dividers
+  .form-section {
+    margin-bottom: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  // Priority selector
+  .priority-option {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+
+    .priority-label {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .priority-description {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+  }
+
+  // Time slider
+  .time-slider-container {
+    padding: 16px 0;
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      span {
+        font-size: 14px;
+        color: #666;
+      }
+
+      .time-value {
+        font-weight: 600;
+        color: #333;
+        font-size: 16px;
+      }
+    }
+
+    mat-slider {
+      width: 100%;
+    }
+  }
+
+  // Color selector
+  .color-selector {
+    .color-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .color-options {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+
+      .color-option {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 3px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        &.selected {
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+
+          &::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+          }
+        }
+      }
+    }
+
+    .custom-color {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .color-input-wrapper {
+        position: relative;
+
+        input[type="color"] {
+          width: 50px;
+          height: 40px;
+          border: 2px solid rgba(0, 0, 0, 0.12);
+          border-radius: 8px;
+          cursor: pointer;
+          padding: 2px;
+
+          &:hover {
+            border-color: #667eea;
+          }
+        }
+      }
+
+      .hex-input {
+        flex: 1;
+        max-width: 150px;
+      }
+    }
+  }
+
+  // Preview section
+  .preview-section {
+    background: rgba(68, 119, 255, 0.05);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 20px;
+    border: 1px solid rgba(68, 119, 255, 0.2);
+
+    .preview-title {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .preview-ticket {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-left: 4px solid;
+
+      .ticket-prefix {
+        font-weight: 600;
+        margin-right: 4px;
+      }
+
+      .ticket-number {
+        color: #666;
+      }
+    }
+  }
+}
+
+// Dialog actions
+.mat-dialog-actions {
+  padding: 16px 24px !important;
+  gap: 12px;
+
+  button {
+    min-width: 100px;
+
+    mat-icon {
+      margin-right: 4px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    mat-spinner {
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+}
+
+// Material overrides
+::ng-deep {
+  // Dialog container
+  .mat-dialog-container {
+    padding: 0 !important;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  // Form field appearance
+  .mat-form-field-appearance-outline {
+    .mat-form-field-outline {
+      background-color: white;
+    }
+
+    &.mat-focused {
+      .mat-form-field-outline-thick {
+        color: #667eea;
+      }
+
+      .mat-form-field-label {
+        color: #667eea;
+      }
+    }
+  }
+
+  // Slider
+  .mat-slider {
+    .mat-slider-track-fill {
+      background-color: #667eea;
+    }
+
+    .mat-slider-thumb {
+      background-color: #667eea;
+      border: 3px solid white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  // Select panel
+  .mat-select-panel {
+    .mat-option {
+      &:hover {
+        background: rgba(102, 126, 234, 0.1);
+      }
+
+      &.mat-selected {
+        background: rgba(102, 126, 234, 0.2);
+      }
+    }
+  }
+
+  // Divider
+  .mat-divider {
+    margin: 0 !important;
+  }
+}
+
+// Required indicator
+.required-indicator {
+  color: #f44336;
+  margin-left: 4px;
+}
+
+// Loading state
+.service-type-dialog.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+// Validation states
+.mat-form-field {
+  &.ng-invalid.ng-touched {
+    .mat-form-field-outline-thick {
+      color: #f44336 !important;
+    }
+  }
+
+  &.ng-valid.ng-touched {
+    .mat-form-field-outline-thick {
+      color: #4caf50 !important;
+    }
+  }
+}
+
+// Animations
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.service-type-dialog {
+  animation: slideIn 0.3s ease-out;
+}

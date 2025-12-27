@@ -1,0 +1,675 @@
+/* ============================================
+   ARCHIVO COMPLETO: src/styles.scss
+   ESTILOS GLOBALES PARA HEALTHSYSTEM - ANGULAR 20
+   ============================================ */
+
+/* ============================================
+   ESTILOS GLOBALES BASE
+   ============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   🌊 FONDO ANIMADO: ONDAS DE GRIS (ACTIVO)
+   ============================================ */
+
+body {
+  position: relative;
+  min-height: 100vh;
+  background: #ffffff;
+
+  &::before,
+  &::after {
+    content: '';
+    position: fixed;
+    width: 800px;
+    height: 800px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+        circle,
+        rgba(200, 210, 225, 0.4) 0%,
+        rgba(200, 210, 225, 0.2) 30%,
+        rgba(200, 210, 225, 0.1) 50%,
+        transparent 70%
+    );
+    animation: waveAnimation 8s linear infinite;
+    z-index: -2;
+    pointer-events: none;
+  }
+
+  &::after {
+    animation-delay: 4s;
+    background: radial-gradient(
+        circle,
+        rgba(220, 225, 235, 0.3) 0%,
+        rgba(220, 225, 235, 0.15) 30%,
+        rgba(220, 225, 235, 0.08) 50%,
+        transparent 70%
+    );
+  }
+}
+
+@keyframes waveAnimation {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   CONFIGURACIÓN DE APP-ROOT
+   ============================================ */
+
+app-root {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   MATERIAL ICONS
+   ============================================ */
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
+}
+
+/* ============================================
+   SCROLLBARS PERSONALIZADAS
+   ============================================ */
+
+* {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(68, 119, 255, 0.3);
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba(68, 119, 255, 0.5);
+    }
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+/* ============================================
+   UTILIDADES GLOBALES
+   ============================================ */
+
+// Smooth transitions
+* {
+  transition-property: background, border, color, fill, stroke, transform, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+// Remove focus outline for mouse users (accessibility preserved)
+.js-focus-visible :focus:not(.focus-visible) {
+  outline: none;
+}
+
+// Ensure images don't overflow
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+// Better text rendering
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ============================================
+   MATERIAL DESIGN OVERRIDES
+   ============================================ */
+
+.mat-mdc-card-header {
+  display: flex;
+  padding: 16px 16px 0;
+  height: 65px;
+}
+
+
+// Custom Material button ripple colors
+.mat-mdc-button .mat-mdc-button-ripple,
+.mat-mdc-icon-button .mat-mdc-button-ripple {
+  .mat-ripple-element {
+    //background-color: rgba(68, 119, 255, 0.2) !important;
+    display: none!important;
+  }
+}
+
+// Material tooltip customization
+.mat-mdc-tooltip {
+  background: rgba(68, 119, 255, 0.9) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white !important;
+}
+
+// Remove Material button default styles that might conflict
+.mat-mdc-icon-button {
+  &.menu-toggle,
+  &.avatar-button,
+  &.menu-item {
+    --mdc-icon-button-state-layer-size: inherit;
+    --mdc-icon-button-icon-size: inherit;
+  }
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+// Tablet
+@media (max-width: 1024px) {
+  body::before,
+  body::after {
+    width: 600px;
+    height: 600px;
+  }
+}
+
+// Mobile
+@media (max-width: 768px) {
+  body::before,
+  body::after {
+    width: 400px;
+    height: 400px;
+  }
+}
+
+// Small mobile
+@media (max-width: 480px) {
+  body::before,
+  body::after {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+/* ============================================
+   LOADING STATES Y ANIMACIONES
+   ============================================ */
+
+// Fade in animation for components
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+// Pulse animation for loading states
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   ESTADOS DE HOVER GLOBALES
+   ============================================ */
+
+// Consistent hover effects
+/*.hover-lift {
+  //transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(68, 119, 255, 0.15);
+  }
+}
+
+.hover-glow {
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 0 20px rgba(68, 119, 255, 0.3);
+  }
+}*/
+
+/* ============================================
+   CLASES DE UTILIDAD
+   ============================================ */
+
+// Text utilities
+.text-primary {
+  color: rgba(68, 119, 255, 0.9);
+}
+
+.text-secondary {
+  color: rgba(68, 119, 255, 0.7);
+}
+
+.text-muted {
+  color: rgba(68, 119, 255, 0.5);
+}
+
+// Background utilities
+.bg-glass {
+  background: linear-gradient(
+      135deg,
+      rgba(68, 119, 255, 0.12) 0%,
+      rgba(59, 103, 231, 0.08) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(68, 119, 255, 0.18);
+}
+
+.bg-glass-strong {
+  background: linear-gradient(
+      135deg,
+      rgba(68, 119, 255, 0.2) 0%,
+      rgba(59, 103, 231, 0.15) 100%
+  );
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(68, 119, 255, 0.25);
+}
+
+// Spacing utilities
+.m-0 { margin: 0; }
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+
+.p-1 { padding: 8px; }
+.p-2 { padding: 16px; }
+.p-3 { padding: 24px; }
+
+// Display utilities
+.d-none { display: none; }
+.d-block { display: block; }
+.d-flex { display: flex; }
+.d-grid { display: grid; }
+
+// Flex utilities
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+// Position utilities
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed { position: fixed; }
+
+// Z-index utilities
+.z-0 { z-index: 0; }
+.z-10 { z-index: 10; }
+.z-50 { z-index: 50; }
+.z-100 { z-index: 100; }
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  body::before,
+  body::after {
+    display: none;
+  }
+
+  .floating-orb {
+    display: none;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY MEJORAS
+   ============================================ */
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .menu-item {
+    border: 2px solid rgba(68, 119, 255, 0.8) !important;
+  }
+
+  .menu-item.active {
+    border: 2px solid white !important;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  body::before,
+  body::after {
+    animation: none !important;
+  }
+
+  .floating-orb {
+    animation: none !important;
+  }
+}
+
+// Dark mode support (preparado para futuro)
+@media (prefers-color-scheme: dark) {
+  // Se puede activar en el futuro agregando clases específicas
+  // body.dark-mode { ... }
+}
+
+/* ============================================
+   FOCUS MANAGEMENT
+   ============================================ */
+
+// Ensure focus is visible for keyboard navigation
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid rgba(68, 119, 255, 0.8);
+  outline-offset: 2px;
+}
+
+// Skip links for screen readers
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: rgba(68, 119, 255, 0.9);
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 9999;
+
+  &:focus {
+    top: 6px;
+  }
+}
+
+/* ============================================
+   NOTAS PARA EL DESARROLLADOR
+   ============================================ */
+
+/*
+ESTRUCTURA DE Z-INDEX:
+- Background waves: -2
+- Floating orbs: 0
+- Main content: 1
+- Sidebar: 900
+- Header: 1000
+- Mobile overlay: 1850
+- User menu: 2000
+- Loading screen: 9999
+
+BREAKPOINTS:
+- Mobile: <= 768px
+- Tablet: <= 1024px
+- Desktop: > 1024px
+
+PALETA DE COLORES:
+- Primary: rgba(68, 119, 255, x)
+- Secondary: rgba(59, 103, 231, x)
+- Background: #d9dde4
+- Glass overlay: rgba(255, 255, 255, 0.x)
+
+PARA CAMBIAR FONDO ANIMADO:
+Actualmente usa: Ondas animadas (waveAnimation)
+Para cambiar, buscar en este archivo las otras opciones comentadas
+*/
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+/* Agregar a src/styles.scss */
+
+/* Eliminar completamente el state layer (círculo gris) */
+.mat-mdc-button .mdc-button__ripple,
+.mat-mdc-icon-button .mdc-button__ripple {
+  display: none !important;
+}
+
+/* Eliminar el pseudo-elemento que crea el círculo */
+.mat-mdc-button::before,
+.mat-mdc-icon-button::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* Para botones específicos de nuestro menú */
+.menu-item,
+.menu-toggle,
+.avatar-button {
+  --mdc-ripple-hover-opacity: 0 !important;
+  --mdc-ripple-focus-opacity: 0 !important;
+  --mdc-ripple-press-opacity: 0 !important;
+
+  .mdc-button__ripple {
+    display: none !important;
+  }
+
+  &::before,
+  &::after {
+    display: none !important;
+  }
+}
+
+/* Forzar que no aparezca en hover */
+.mat-mdc-icon-button:hover .mdc-button__ripple {
+  opacity: 0 !important;
+  transform: scale(0) !important;
+}
+
+/* Eliminar TODOS los overlays de Material */
+.mat-mdc-button,
+.mat-mdc-icon-button {
+  --mat-mdc-button-ripple-color: transparent !important;
+  --mdc-ripple-color: transparent !important;
+}
+
+/* Ocultar el layer específico que causa el círculo */
+.mdc-button__ripple::before,
+.mdc-button__ripple::after {
+  display: none !important;
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+// Estilos globales para modo kiosko
+body.kiosk-mode-active {
+  overflow: hidden;
+
+  // Ocultar el sidebar cuando el modo kiosko está activo
+  app-sidebar,
+  .sidebar,
+  .mat-sidenav {
+    display: none !important;
+  }
+
+  // Ocultar el header también si es necesario
+  app-header,
+  .header {
+    display: none !important;
+  }
+
+  // Prevenir selección de texto en modo kiosko
+  * {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+  }
+
+  // Permitir selección solo en campos de entrada
+  input,
+  textarea {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+  }
+}
+
+// Asegurar que el componente de tickets esté por encima
+app-ticket-generation {
+  position: relative;
+  z-index: 10000;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+// Agregar estos estilos en src/styles.scss o crear un archivo nuevo src/app/styles/dialog-overrides.scss
+
+// Estilos globales para los diálogos de Material
+.cdk-overlay-pane {
+  // Para el diálogo de detalles de cola
+  &.full-width {
+    .mat-mdc-dialog-container {
+      padding: 0 !important;
+      overflow: hidden !important;
+
+      .mat-mdc-dialog-surface {
+        padding: 0 !important;
+        overflow: hidden !important;
+        display: flex;
+        flex-direction: column;
+        max-height: 70vh !important;
+      }
+    }
+  }
+}
+
+// Estilos específicos para el diálogo de queue-details
+.queue-details-dialog {
+  .mat-mdc-dialog-title {
+    margin: 0 !important;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .mat-mdc-dialog-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-height: calc(70vh - 100px) !important;
+    overflow-y: auto !important;
+    flex: 1 1 auto;
+  }
+
+  .mat-mdc-dialog-actions {
+    margin: 0 !important;
+    padding: 8px 16px !important;
+    border-top: 1px solid #e0e0e0;
+    min-height: 48px;
+  }
+
+  // Ajustes para las pestañas
+  .mat-mdc-tab-group {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .mat-mdc-tab-header {
+      flex-shrink: 0;
+    }
+
+    .mat-mdc-tab-body-wrapper {
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+
+    .mat-mdc-tab-body {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+    }
+
+    .mat-mdc-tab-body-content {
+      overflow: visible !important;
+    }
+  }
+}

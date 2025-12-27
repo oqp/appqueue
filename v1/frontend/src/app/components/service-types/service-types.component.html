@@ -1,0 +1,191 @@
+<div class="service-types-container">
+  <!-- Statistics Cards -->
+  <mat-card class="stats-card mb-3">
+    <mat-card-content>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <mat-icon color="primary">assignment</mat-icon>
+          <div class="stat-value">{{ totalServices() }}</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-item">
+          <mat-icon style="color: #4caf50">check_circle</mat-icon>
+          <div class="stat-value">{{ activeServices() }}</div>
+          <div class="stat-label">Activos</div>
+        </div>
+        <div class="stat-item">
+          <mat-icon style="color: #9e9e9e">cancel</mat-icon>
+          <div class="stat-value">{{ inactiveServices() }}</div>
+          <div class="stat-label">Inactivos</div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Filters Card -->
+  <mat-card class="filters-card mb-3">
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filters-form">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Buscar</mat-label>
+          <input matInput formControlName="searchText" placeholder="Código, nombre o descripción">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Prioridad</mat-label>
+          <mat-select formControlName="priority">
+            <mat-option value="">Todas</mat-option>
+            <mat-option *ngFor="let option of priorityOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="filter-actions">
+          <mat-checkbox formControlName="activeOnly">Solo activos</mat-checkbox>
+          <button mat-icon-button (click)="refreshData()" matTooltip="Actualizar">
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Main Table Card -->
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <div class="card-title-container">
+          <span>Tipos de Atenciones</span>
+          <button mat-raised-button color="primary" class="new-service-btn" (click)="openCreateDialog()">
+            <mat-icon>add</mat-icon>
+            Nuevo Tipo de Atención
+          </button>
+        </div>
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="table-container" *ngIf="!loading(); else loadingTemplate">
+        <table mat-table [dataSource]="dataSource" matSort class="service-types-table">
+
+          <!-- Código Column -->
+          <ng-container matColumnDef="Code">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Código</th>
+            <td mat-cell *matCellDef="let service">
+              <span class="code-badge">{{ service.Code }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Nombre Column -->
+          <ng-container matColumnDef="Name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
+            <td mat-cell *matCellDef="let service">
+              <div class="service-name">
+                <strong>{{ service.Name }}</strong>
+                <small *ngIf="service.Description" class="d-block text-muted">{{ service.Description }}</small>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Prioridad Column -->
+          <ng-container matColumnDef="Priority">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Prioridad</th>
+            <td mat-cell *matCellDef="let service">
+              <mat-chip [ngClass]="'priority-' + getPriorityClass(service.Priority)" class="priority-chip">
+                {{ getPriorityLabel(service.Priority) }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Prefijo Column -->
+          <ng-container matColumnDef="TicketPrefix">
+            <th mat-header-cell *matHeaderCellDef>Prefijo</th>
+            <td mat-cell *matCellDef="let service">
+              <span class="prefix-badge">{{ service.TicketPrefix }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Tiempo Column -->
+          <ng-container matColumnDef="AverageTimeMinutes">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Tiempo (min)</th>
+            <td mat-cell *matCellDef="let service">
+              <div class="time-cell">
+                <mat-icon class="time-icon">schedule</mat-icon>
+                {{ service.AverageTimeMinutes }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Color Column -->
+          <ng-container matColumnDef="Color">
+            <th mat-header-cell *matHeaderCellDef>Color</th>
+            <td mat-cell *matCellDef="let service">
+              <div class="color-preview"
+                   [style.background-color]="service.Color"
+                   [matTooltip]="service.Color">
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Estado Column -->
+          <ng-container matColumnDef="IsActive">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+            <td mat-cell *matCellDef="let service">
+              <mat-chip [ngClass]="service.IsActive ? 'active-chip' : 'inactive-chip'" class="status-chip">
+                {{ service.IsActive ? 'Activo' : 'Inactivo' }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let service">
+              <button mat-icon-button (click)="openEditDialog(service)" matTooltip="Editar">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button
+                      (click)="toggleServiceStatus(service)"
+                      [matTooltip]="service.IsActive ? 'Desactivar' : 'Activar'">
+                <mat-icon>{{ service.IsActive ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+              </button>
+              <button mat-icon-button
+                      (click)="deleteServiceType(service)"
+                      matTooltip="Eliminar"
+                      [disabled]="service.IsActive">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <!-- Header and Row Declarations -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              [class.inactive-row]="!row.IsActive"></tr>
+
+          <!-- No Data Row -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
+              <mat-icon>inbox</mat-icon>
+              <p>No se encontraron tipos de atenciones</p>
+            </td>
+          </tr>
+        </table>
+
+        <mat-paginator [pageSizeOptions]="[5, 10, 20, 50]"
+                       showFirstLastButtons
+                       aria-label="Seleccionar página">
+        </mat-paginator>
+      </div>
+
+      <!-- Loading Template -->
+      <ng-template #loadingTemplate>
+        <div class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
+</div>

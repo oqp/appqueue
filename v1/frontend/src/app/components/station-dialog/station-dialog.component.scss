@@ -1,0 +1,241 @@
+// station-dialog.component.scss
+.station-dialog {
+  min-width: 800px;
+  max-width: 900px;
+
+  @media (max-width: 768px) {
+    min-width: 90vw;
+  }
+}
+
+// Dialog header
+.mat-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0;
+  padding: 24px 24px 16px;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: #667eea;
+  }
+}
+
+// Dialog content
+.mat-dialog-content {
+  padding: 24px !important;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+// Form styles
+.station-form {
+  width: 100%;
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 8px;
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+
+  .form-field-half {
+    flex: 1;
+
+    @media (max-width: 600px) {
+      width: 100%;
+    }
+  }
+
+  .form-field-full {
+    width: 100%;
+  }
+
+  // Mat form field customization
+  .mat-form-field {
+    width: 100%;
+
+    .mat-icon {
+      margin-right: 8px;
+    }
+  }
+
+  // Toggle container
+  .toggle-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px 0;
+
+    .mat-slide-toggle {
+      margin-bottom: 8px;
+    }
+
+    .toggle-label {
+      font-size: 14px;
+      margin-left: 8px;
+    }
+
+    .toggle-hint {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+  }
+}
+
+// Status icons in select
+.status-icon {
+  margin-right: 8px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+
+  &.available {
+    color: #4caf50;
+  }
+
+  &.maintenance {
+    color: #ff9800;
+  }
+
+  &.offline {
+    color: #f44336;
+  }
+}
+
+// Option icons
+.option-icon {
+  margin-right: 8px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  opacity: 0.7;
+}
+
+// Dialog actions
+.mat-dialog-actions {
+  padding: 16px 24px !important;
+  gap: 12px;
+
+  button {
+    min-width: 100px;
+
+    mat-icon {
+      margin-right: 4px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    mat-spinner {
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+}
+
+// Material overrides
+::ng-deep {
+  // Dialog container
+  .mat-dialog-container {
+    padding: 0 !important;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  // Form field appearance
+  .mat-form-field-appearance-outline {
+    .mat-form-field-outline {
+      background-color: white;
+    }
+
+    &.mat-focused {
+      .mat-form-field-outline-thick {
+        color: #667eea;
+      }
+
+      .mat-form-field-label {
+        color: #667eea;
+      }
+    }
+  }
+
+  // Slide toggle
+  .mat-slide-toggle.mat-checked {
+    .mat-slide-toggle-bar {
+      background-color: rgba(102, 126, 234, 0.5);
+    }
+
+    .mat-slide-toggle-thumb {
+      background-color: #667eea;
+    }
+  }
+
+  // Select panel
+  .mat-select-panel {
+    .mat-option {
+      &:hover {
+        background: rgba(102, 126, 234, 0.1);
+      }
+
+      &.mat-selected {
+        background: rgba(102, 126, 234, 0.2);
+      }
+    }
+  }
+
+  // Divider
+  .mat-divider {
+    margin: 0 !important;
+  }
+}
+
+// Loading state
+.station-dialog.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+// Validation states
+.mat-form-field {
+  &.ng-invalid.ng-touched {
+    .mat-form-field-outline-thick {
+      color: #f44336 !important;
+    }
+  }
+
+  &.ng-valid.ng-touched {
+    .mat-form-field-outline-thick {
+      color: #4caf50 !important;
+    }
+  }
+}
+
+// Animations
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.station-dialog {
+  animation: slideIn 0.3s ease-out;
+}
