@@ -34,7 +34,9 @@
                 "input": "public"
               },
               "src/assets",
-              "src/favicon.ico"
+              "src/favicon.ico",
+              "src/tv01.html",
+              "src/tv02.html"
             ],
             "styles": [
               "@angular/material/prebuilt-themes/azure-blue.css",
