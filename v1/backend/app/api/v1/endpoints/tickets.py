@@ -275,6 +275,72 @@ async def create_quick_ticket(
         )
 
 
+@router.post("/anonymous", response_model=TicketResponse)
+async def create_anonymous_ticket(
+        ticket_data: Dict[str, Any] = Body(...),
+        db: Session = Depends(get_db),
+        current_user: User = Depends(require_permissions(["tickets.create"]))
+):
+    """
+    Crea un ticket anónimo (sin paciente registrado)
+
+    - Se usa cuando el paciente no existe ni en la BD local ni en el servicio DNI
+    - El ticket no estará asociado a ningún paciente
+    - Se guarda el documento ingresado en las notas para referencia
+    - Notifica via WebSocket a todos los displays
+    """
+    try:
+        service_type_id = ticket_data.get("ServiceTypeId")
+        document_number = ticket_data.get("DocumentNumber", "N/A")
+        notes = ticket_data.get("Notes", f"Ticket anónimo - Documento: {document_number}")
+
+        logger.info(f"Creación de ticket anónimo para documento {document_number}")
+
+        # Obtener el tipo de servicio
+        service_type = db.query(ServiceType).filter(ServiceType.Id == service_type_id).first()
+        if not service_type:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tipo de servicio no encontrado"
+            )
+
+        # Crear ticket sin paciente usando el CRUD
+        ticket = ticket_crud.create_anonymous_ticket(
+            db,
+            service_type_id=service_type_id,
+            document_number=document_number,
+            notes=notes
+        )
+
+        # Limpiar cache
+        if cache_manager:
+            cache_manager.delete(f"queue_stats")
+            cache_manager.delete(f"service_queue:{service_type_id}")
+
+        logger.info(f"Ticket anónimo creado: {ticket.TicketNumber}")
+
+        # ========================================
+        # NOTIFICAR VIA WEBSOCKET
+        # ========================================
+        # Crear un paciente ficticio para la notificación
+        class AnonymousPatient:
+            FullName = "SIN REGISTRO"
+            DocumentNumber = document_number
+
+        await notify_new_ticket(ticket, AnonymousPatient(), service_type)
+
+        return TicketResponse.model_validate(ticket)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error en creación de ticket anónimo: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno al crear ticket anónimo"
+        )
+
+
 
 # ========================================
 # ENDPOINTS DE CONSULTA DE TICKETS
@@ -318,7 +384,7 @@ async def get_ticket_by_number(
     return TicketResponse.model_validate(ticket)
 
 
-@router.get("/", response_model=TicketListResponse)
+@router.get("", response_model=TicketListResponse)
 async def list_tickets(
         skip: int = Query(0, ge=0, description="Registros a omitir"),
         limit: int = Query(20, ge=1, le=100, description="Límite de registros"),

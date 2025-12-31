@@ -1,0 +1,97 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ isEdit ? 'edit' : 'person_add' }}</mat-icon>
+  {{ isEdit ? 'Editar Paciente' : 'Nuevo Paciente' }}
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="patient-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Número de Documento</mat-label>
+      <input matInput formControlName="document_number" placeholder="Ej: 12345678">
+      <mat-icon matPrefix>badge</mat-icon>
+      <mat-error *ngIf="form.get('document_number')?.invalid">
+        {{ getErrorMessage('document_number') }}
+      </mat-error>
+    </mat-form-field>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Nombres</mat-label>
+        <input matInput formControlName="first_name" placeholder="Ej: Juan Carlos">
+        <mat-error *ngIf="form.get('first_name')?.invalid">
+          {{ getErrorMessage('first_name') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Apellidos</mat-label>
+        <input matInput formControlName="last_name" placeholder="Ej: Pérez García">
+        <mat-error *ngIf="form.get('last_name')?.invalid">
+          {{ getErrorMessage('last_name') }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Fecha de Nacimiento</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="birth_date" [max]="maxDate">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-error *ngIf="form.get('birth_date')?.invalid">
+          {{ getErrorMessage('birth_date') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Género</mat-label>
+        <mat-select formControlName="gender">
+          <mat-option value="M">
+            <mat-icon>male</mat-icon> Masculino
+          </mat-option>
+          <mat-option value="F">
+            <mat-icon>female</mat-icon> Femenino
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.get('gender')?.invalid">
+          {{ getErrorMessage('gender') }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Teléfono</mat-label>
+      <input matInput formControlName="phone" placeholder="Ej: +51 999 999 999">
+      <mat-icon matPrefix>phone</mat-icon>
+      <mat-error *ngIf="form.get('phone')?.invalid">
+        {{ getErrorMessage('phone') }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" placeholder="ejemplo@correo.com">
+      <mat-icon matPrefix>email</mat-icon>
+      <mat-error *ngIf="form.get('email')?.invalid">
+        {{ getErrorMessage('email') }}
+      </mat-error>
+    </mat-form-field>
+
+    <div class="toggle-row" *ngIf="isEdit">
+      <mat-slide-toggle formControlName="is_active" color="primary">
+        Paciente Activo
+      </mat-slide-toggle>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">
+    <mat-icon>close</mat-icon>
+    Cancelar
+  </button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="form.invalid">
+    <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
+    {{ isEdit ? 'Guardar' : 'Crear' }}
+  </button>
+</mat-dialog-actions>

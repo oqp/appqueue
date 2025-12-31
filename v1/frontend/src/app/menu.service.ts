@@ -28,9 +28,11 @@ export class MenuService {
     { id: 'workstations', label: 'Estaciones de Trabajo', icon: 'desktop_windows', route: '/workstations' },
     { id: 'servicetypes', label: 'Tipos de Atenciones', icon: 'category', route: '/servicetypes' },
     { id: 'users', label: 'Usuarios', icon: 'group', route: '/users' },
-    { id: 'reports', label: 'Reportes', icon: 'assessment', route: '/reports' },
-    { id: 'notifications', label: 'Notificaciones', icon: 'notifications', route: '/notifications' },
-    { id: 'websocket', label: 'Websocket', icon: 'wifi', route: '/websocket' }
+    { id: 'roles', label: 'Roles', icon: 'security', route: '/roles' },
+    { id: 'display-videos', label: 'Videos Display', icon: 'live_tv', route: '/display-videos' },
+    { id: 'reports', label: 'Reportes', icon: 'assessment', route: '/reports' }
+    // { id: 'notifications', label: 'Notificaciones', icon: 'notifications', route: '/notifications' },
+    // { id: 'websocket', label: 'Websocket', icon: 'wifi', route: '/websocket' }
   ];
 
   constructor(private router: Router) {

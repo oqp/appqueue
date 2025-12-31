@@ -1,0 +1,184 @@
+.patients-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 24px;
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .title-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .header-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: #1565c0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+
+  .stats-chips {
+    display: flex;
+    gap: 12px;
+
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: #f5f5f5;
+      font-size: 14px;
+      color: #666;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      &.active {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+    }
+  }
+}
+
+.actions-card {
+  margin-bottom: 24px;
+
+  .actions-bar {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .search-field {
+      flex: 1;
+      min-width: 280px;
+    }
+  }
+}
+
+.table-card {
+  position: relative;
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+  }
+}
+
+.patients-table {
+  width: 100%;
+
+  .document-number {
+    font-family: monospace;
+    font-weight: 500;
+    color: #1565c0;
+  }
+
+  mat-chip {
+    &.active {
+      background: #e8f5e9 !important;
+      color: #2e7d32 !important;
+    }
+
+    &.inactive {
+      background: #fafafa !important;
+      color: #9e9e9e !important;
+    }
+  }
+}
+
+.empty-state {
+  padding: 60px 24px;
+  text-align: center;
+  color: #999;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-weight: 500;
+    color: #666;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .patients-container {
+    padding: 16px;
+  }
+
+  .page-header {
+    .header-content {
+      flex-direction: column;
+    }
+
+    .title-section {
+      .header-icon {
+        font-size: 36px;
+        width: 36px;
+        height: 36px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+    }
+  }
+
+  .actions-card .actions-bar {
+    flex-direction: column;
+
+    .search-field {
+      width: 100%;
+    }
+
+    button {
+      width: 100%;
+    }
+  }
+}

@@ -15,6 +15,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 // Services and Interfaces
 import {
@@ -27,6 +28,10 @@ import {
 } from '../../services/ticket.service';
 import {MatTooltip} from '@angular/material/tooltip';
 import {VirtualKeyboardComponent} from '../virtual-keyboard/virtual-keyboard.component';
+import {
+  PatientNotFoundDialogComponent,
+  PatientNotFoundDialogResult
+} from '../patient-not-found-dialog/patient-not-found-dialog.component';
 
 @Component({
   selector: 'app-ticket-generation',
@@ -45,6 +50,7 @@ import {VirtualKeyboardComponent} from '../virtual-keyboard/virtual-keyboard.com
     MatDatepickerModule,
     MatNativeDateModule,
     MatDividerModule,
+    MatDialogModule,
     MatTooltip
   ],
   templateUrl: './ticket-generation.component.html',
@@ -67,6 +73,10 @@ export class TicketGenerationComponent implements OnInit, OnDestroy {
   generatedTicket: Ticket | null = null;
   selectedServiceType: ServiceType | null = null;
 
+  // Para tickets sin DNI
+  isAnonymousTicket = false;
+  pendingDocumentNumber = '';
+
   // Formularios
   searchForm: FormGroup;
   patientForm: FormGroup;
@@ -74,7 +84,8 @@ export class TicketGenerationComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private ticketService: TicketService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {
     // Formulario de búsqueda
     this.searchForm = this.fb.group({
@@ -245,6 +256,7 @@ export class TicketGenerationComponent implements OnInit, OnDestroy {
 
   /**
    * Busca un paciente por número de documento
+   * Primero busca en BD local, si no existe consulta el servicio externo de DNI
    */
   searchPatient(): void {
     if (this.searchForm.invalid) {
@@ -255,25 +267,72 @@ export class TicketGenerationComponent implements OnInit, OnDestroy {
     const documentNumber = this.searchForm.get('documentNumber')?.value;
     this.isSearching = true;
     this.resetState();
+    this.pendingDocumentNumber = documentNumber;
 
     this.ticketService.searchPatientByDocument(documentNumber)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (patient) => {
           this.isSearching = false;
-          this.currentPatient = patient;
-          this.showPatientForm = false;
-          this.showMessage(`Paciente encontrado: ${patient.FullName}`, 'success');
+          if (patient && patient.Id) {
+            this.currentPatient = patient;
+            this.showPatientForm = false;
+            this.isAnonymousTicket = false;
+            this.showMessage(`Paciente encontrado: ${patient.FullName}`, 'success');
+          } else {
+            // Paciente no encontrado en ningún lado
+            this.showPatientNotFoundDialog(documentNumber);
+          }
         },
         error: (error) => {
           this.isSearching = false;
           if (error.status === 404) {
-            this.showNewPatientForm(documentNumber);
+            // Paciente no encontrado - mostrar diálogo
+            this.showPatientNotFoundDialog(documentNumber);
           } else {
             this.showMessage('Error al buscar el paciente', 'error');
           }
         }
       });
+  }
+
+  /**
+   * Muestra el diálogo cuando el paciente no se encuentra
+   */
+  private showPatientNotFoundDialog(documentNumber: string): void {
+    const dialogRef = this.dialog.open(PatientNotFoundDialogComponent, {
+      width: '500px',
+      maxWidth: '95vw',
+      disableClose: true,
+      data: { documentNumber }
+    });
+
+    dialogRef.afterClosed().subscribe((result: PatientNotFoundDialogResult) => {
+      if (result?.action === 'generate_without_dni') {
+        this.prepareAnonymousTicket(documentNumber);
+      } else {
+        this.searchForm.reset();
+      }
+    });
+  }
+
+  /**
+   * Prepara el estado para generar un ticket sin DNI
+   */
+  private prepareAnonymousTicket(documentNumber: string): void {
+    this.isAnonymousTicket = true;
+    this.pendingDocumentNumber = documentNumber;
+
+    // Crear un paciente temporal para mostrar en la UI
+    this.currentPatient = {
+      Id: 'ANONYMOUS',
+      DocumentNumber: documentNumber,
+      FullName: 'PACIENTE SIN REGISTRO',
+      BirthDate: '',
+      Gender: 'M'
+    };
+
+    this.showMessage('Seleccione un servicio para generar el ticket', 'info');
   }
 
   /**
@@ -299,9 +358,15 @@ export class TicketGenerationComponent implements OnInit, OnDestroy {
     }
 
     const documentNumber = this.searchForm.get('documentNumber')?.value;
+    const fullName = this.patientForm.get('fullName')?.value || '';
+    const nameParts = fullName.trim().split(' ');
+    const firstName = nameParts[0] || 'SIN NOMBRE';
+    const lastName = nameParts.slice(1).join(' ') || 'SIN APELLIDO';
+
     const patientData: PatientCreate = {
-      document_number: documentNumber,  // Cambiado a snake_case
-      full_name: this.patientForm.get('fullName')?.value,
+      document_number: documentNumber,
+      first_name: firstName,
+      last_name: lastName,
       birth_date: this.patientForm.get('birthDate')?.value,
       gender: this.patientForm.get('gender')?.value,
       phone: this.patientForm.get('phone')?.value || null,
@@ -329,37 +394,46 @@ export class TicketGenerationComponent implements OnInit, OnDestroy {
   /**
    * Selecciona un servicio y genera el ticket
    */
-  /**
-   * Selecciona un servicio y genera el ticket
-   */
   selectService(serviceType: ServiceType): void {
-    if (!this.currentPatient?.Id) {
+    if (!this.currentPatient) {
       this.showMessage('Debe seleccionar un paciente primero', 'error');
       return;
     }
 
     console.log('Paciente actual:', this.currentPatient);
     console.log('Servicio seleccionado:', serviceType);
+    console.log('Es ticket anónimo:', this.isAnonymousTicket);
 
     this.isCreatingTicket = true;
     this.selectedServiceType = serviceType;
 
-    // Llamar al servicio con los parámetros correctos
+    if (this.isAnonymousTicket) {
+      // Crear ticket sin paciente (anónimo)
+      this.createAnonymousTicket(serviceType);
+    } else {
+      // Crear ticket normal con paciente
+      this.createRegularTicket(serviceType);
+    }
+  }
+
+  /**
+   * Crea un ticket regular con paciente registrado
+   */
+  private createRegularTicket(serviceType: ServiceType): void {
     this.ticketService.createQuickTicket(
-      this.currentPatient.Id,  // ID del paciente
-      serviceType.Id          // ID del tipo de servicio
+      this.currentPatient!.Id!,
+      serviceType.Id
     )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (ticket) => {
           this.isCreatingTicket = false;
-          // Enriquecer el ticket con información adicional
           this.generatedTicket = {
             ...ticket,
-            PatientName: this.generatedTicket?.PatientName || this.currentPatient!.FullName,
-            PatientDocument: this.generatedTicket?.PatientDocument || this.currentPatient!.DocumentNumber,
-            ServiceTypeName: this.generatedTicket?.ServiceTypeName || serviceType.Name,
-            EstimatedTime: this.generatedTicket?.EstimatedTime || serviceType.AverageTimeMinutes
+            PatientName: ticket.PatientName || this.currentPatient!.FullName,
+            PatientDocument: ticket.PatientDocument || this.currentPatient!.DocumentNumber,
+            ServiceTypeName: ticket.ServiceTypeName || serviceType.Name,
+            EstimatedTime: ticket.EstimatedTime || serviceType.AverageTimeMinutes
           };
           this.showMessage('Ticket generado exitosamente', 'success');
         },
@@ -368,6 +442,33 @@ export class TicketGenerationComponent implements OnInit, OnDestroy {
           const errorMessage = error?.error?.detail || 'Error al generar el ticket';
           this.showMessage(errorMessage, 'error');
           console.error('Error al crear ticket:', error);
+        }
+      });
+  }
+
+  /**
+   * Crea un ticket anónimo (sin paciente registrado)
+   */
+  private createAnonymousTicket(serviceType: ServiceType): void {
+    this.ticketService.createAnonymousTicket(serviceType.Id, this.pendingDocumentNumber)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (ticket) => {
+          this.isCreatingTicket = false;
+          this.generatedTicket = {
+            ...ticket,
+            PatientName: 'SIN REGISTRO',
+            PatientDocument: this.pendingDocumentNumber || 'N/A',
+            ServiceTypeName: ticket.ServiceTypeName || serviceType.Name,
+            EstimatedTime: ticket.EstimatedTime || serviceType.AverageTimeMinutes
+          };
+          this.showMessage('Ticket generado exitosamente (sin DNI)', 'success');
+        },
+        error: (error) => {
+          this.isCreatingTicket = false;
+          const errorMessage = error?.error?.detail || 'Error al generar el ticket';
+          this.showMessage(errorMessage, 'error');
+          console.error('Error al crear ticket anónimo:', error);
         }
       });
   }
@@ -411,6 +512,8 @@ export class TicketGenerationComponent implements OnInit, OnDestroy {
     this.showPatientForm = false;
     this.generatedTicket = null;
     this.selectedServiceType = null;
+    this.isAnonymousTicket = false;
+    this.pendingDocumentNumber = '';
     this.patientForm.reset();
   }
 
@@ -449,16 +552,26 @@ export class TicketGenerationComponent implements OnInit, OnDestroy {
 
   /**
    * Obtiene el icono correspondiente al servicio
+   * Iconos actualizados para coincidir con los servicios reales de la BD
    */
   getServiceIcon(serviceName: string): string {
     const iconMap: { [key: string]: string } = {
-      'ENTREGA RESULTADOS': 'assignment',
-      'LABORATORIO CLINICO': 'biotech',
-      'TOMA MUESTRAS': 'vaccines',
+      // Servicios reales de la BD
+      'ANÁLISIS': 'biotech',
+      'ANALISIS': 'biotech',
+      'ENTREGA DE RESULTADOS': 'assignment',
+      'ENTREGA DE MUESTRAS': 'science',
+      'CONSULTAS': 'medical_services',
+      'SERVICIOS DE PRIORIDAD': 'priority_high',
+      'COBRO DE PAGOS': 'payments',
+      // Aliases y variaciones
+      'RESULTADOS': 'assignment',
+      'MUESTRAS': 'science',
+      'PRIORIDAD': 'priority_high',
+      'CAJA': 'payments',
+      'LABORATORIO': 'biotech',
+      // Servicios adicionales comunes
       'RAYOS X': 'radio_button_checked',
-      'ANALISIS SANGRE': 'bloodtype',
-      'EXAMEN ORINA': 'science',
-      'CONSULTA MEDICA': 'medical_services',
       'EMERGENCIA': 'emergency',
       'FARMACIA': 'local_pharmacy',
       'VACUNACION': 'vaccines'
@@ -537,5 +650,77 @@ export class TicketGenerationComponent implements OnInit, OnDestroy {
     this.searchForm.patchValue({
       documentNumber: ''
     });
+  }
+
+  /**
+   * Continúa sin documento - busca o crea el paciente genérico 00000000
+   */
+  continueWithoutDocument(): void {
+    this.resetState();
+    this.isSearching = true;
+
+    const anonymousDocumentNumber = '00000000';
+
+    // Buscar el paciente genérico
+    this.ticketService.searchPatientByDocument(anonymousDocumentNumber)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (patient) => {
+          this.isSearching = false;
+          if (patient && patient.Id) {
+            // Paciente genérico encontrado
+            this.currentPatient = patient;
+            this.isAnonymousTicket = false; // Usamos el flujo normal
+            this.showMessage('Seleccione un servicio para generar el ticket', 'info');
+          } else {
+            // No existe, crearlo
+            this.createAnonymousPatient();
+          }
+        },
+        error: (error) => {
+          if (error.status === 404) {
+            // No existe, crearlo
+            this.createAnonymousPatient();
+          } else {
+            this.isSearching = false;
+            this.showMessage('Error al buscar paciente genérico', 'error');
+          }
+        }
+      });
+  }
+
+  /**
+   * Crea el paciente genérico para tickets sin documento
+   */
+  private createAnonymousPatient(): void {
+    const anonymousPatientData: PatientCreate = {
+      document_number: '00000000',
+      first_name: 'PACIENTE',
+      last_name: 'NO IDENTIFICADO',
+      birth_date: '1900-01-01',
+      gender: 'M',
+      phone: null,
+      email: null
+    };
+
+    this.ticketService.createPatient(anonymousPatientData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (patient) => {
+          this.isSearching = false;
+          this.currentPatient = patient;
+          this.isAnonymousTicket = false;
+          this.showMessage('Seleccione un servicio para generar el ticket', 'info');
+        },
+        error: (error) => {
+          this.isSearching = false;
+          // Si ya existe (race condition), intentar buscarlo de nuevo
+          if (error.status === 400 && error.error?.detail?.includes('existe')) {
+            this.continueWithoutDocument();
+          } else {
+            this.showMessage('Error al crear paciente genérico', 'error');
+          }
+        }
+      });
   }
 }

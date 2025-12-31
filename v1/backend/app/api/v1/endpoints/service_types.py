@@ -373,7 +373,7 @@ async def get_service_type_by_code(
         )
 
 
-@router.get("/", response_model=ServiceTypeListResponse)
+@router.get("", response_model=ServiceTypeListResponse)
 async def list_service_types(
         skip: int = Query(0, ge=0, description="Registros a omitir"),
         limit: int = Query(20, ge=1, le=100, description="Límite de registros"),

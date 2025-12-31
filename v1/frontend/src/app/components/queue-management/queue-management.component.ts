@@ -27,56 +27,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatMenuModule } from '@angular/material/menu';
 
 // Services
-import { QueueService } from '../../services/queue.service';
+import { QueueService, QueueState, QueueSummary, ServiceType } from '../../services/queue.service';
 import { AuthService } from '../../services/auth.service';
-
-// Interfaces
-interface QueueState {
-  Id: number;
-  ServiceTypeId: number;
-  ServiceName?: string;
-  ServiceCode?: string;
-  StationId?: number;
-  StationName?: string;
-  StationCode?: string;
-  CurrentTicketId?: string;
-  CurrentTicketNumber?: string;
-  NextTicketId?: string;
-  NextTicketNumber?: string;
-  QueueLength: number;
-  AverageWaitTime: number;
-  LastUpdateAt: Date;
-  IsActive: boolean;
-  EstimatedWaitTime?: number;
-  Color?: string;
-  TicketPrefix?: string;
-  PendingTickets?: Ticket[];
-}
-
-interface QueueSummary {
-  TotalQueues: number;
-  ActiveQueues: number;
-  TotalWaiting: number;
-  StationsBusy: number;
-  AverageWaitTime: number;
-}
-
-interface Ticket {
-  Id: string;
-  TicketNumber: string;
-  PatientName: string;
-  Position: number;
-  EstimatedTime?: Date;
-  Status: string;
-}
-
-interface ServiceType {
-  Id: number;
-  Name: string;
-  Code: string;
-  Color: string;
-  TicketPrefix: string;
-}
 
 @Component({
   selector: 'app-queue-management',
@@ -154,7 +106,13 @@ export class QueueManagementComponent implements OnInit, OnDestroy {
 
   // User permissions
   canManageQueues = false;
+  isAdmin = false;
+  isSupervisor = false;
   currentUser: any = null;
+
+  // Admin operations state
+  isCleanupRunning = false;
+  isVerificationRunning = false;
 
   constructor(
     private fb: FormBuilder,
@@ -186,8 +144,10 @@ export class QueueManagementComponent implements OnInit, OnDestroy {
   // Permissions
   private checkPermissions(): void {
     this.currentUser = this.authService.getCurrentUser();
-    const userRole = this.currentUser?.role;
-    this.canManageQueues = ['admin', 'supervisor', 'technician'].includes(userRole?.toLowerCase());
+    const userRole = this.currentUser?.role?.toLowerCase();
+    this.canManageQueues = ['admin', 'supervisor', 'technician'].includes(userRole);
+    this.isAdmin = userRole === 'admin';
+    this.isSupervisor = userRole === 'supervisor' || userRole === 'admin';
   }
 
   // Data Loading
@@ -622,5 +582,182 @@ export class QueueManagementComponent implements OnInit, OnDestroy {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  // ==================== ADMIN OPERATIONS ====================
+
+  // Daily cleanup - Cancel pending tickets and reset queues
+  performDailyCleanup(): void {
+    if (!this.isAdmin) {
+      this.showMessage('Solo administradores pueden realizar esta acción', 'warning');
+      return;
+    }
+
+    const confirmMessage = `¿Está seguro de realizar la limpieza diaria?
+
+Esta acción:
+• Cancelará todos los tickets pendientes del día anterior
+• Reiniciará los estados de todas las colas
+• Reiniciará los estados de todas las estaciones
+
+Esta acción NO se puede deshacer.`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    this.isCleanupRunning = true;
+
+    this.queueService.dailyCleanup({
+      cancelPendingTickets: true,
+      resetQueueStates: true,
+      resetStationStates: true,
+      clearRedisCache: false
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          console.log('Daily cleanup completed:', result);
+          // Backend devuelve formato PascalCase
+          const message = `Limpieza completada:
+            ${result.TicketsCancelled || 0} tickets cancelados,
+            ${result.QueueStatesReset || 0} colas reiniciadas,
+            ${result.StationsReset || 0} estaciones reiniciadas`;
+
+          if (result.Success) {
+            this.showMessage(message, 'success');
+          } else {
+            this.showMessage(`${message}\n\nErrores: ${result.Errors?.join(', ') || 'Desconocido'}`, 'warning');
+          }
+          this.isCleanupRunning = false;
+          // Reload all data
+          this.loadQueueStates();
+          this.loadSummary();
+        },
+        error: (error) => {
+          console.error('Error in daily cleanup:', error);
+          this.showMessage('Error al realizar la limpieza diaria: ' + (error.message || 'Error desconocido'), 'error');
+          this.isCleanupRunning = false;
+        }
+      });
+  }
+
+  // Verify system state
+  performSystemVerification(): void {
+    if (!this.isSupervisor) {
+      this.showMessage('Solo supervisores y administradores pueden realizar esta acción', 'warning');
+      return;
+    }
+
+    this.isVerificationRunning = true;
+
+    this.queueService.dailyVerification()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          console.log('System verification completed:', result);
+          // Backend devuelve formato PascalCase
+          const overallStatus = result.OverallStatus || 'unknown';
+          const readyToOperate = result.ReadyToOperate;
+
+          let message = `Estado: ${result.OverallMessage || overallStatus}`;
+
+          // Mostrar acciones recomendadas si las hay
+          if (result.RecommendedActions && result.RecommendedActions.length > 0) {
+            message += `\n\nAcciones recomendadas:\n• ${result.RecommendedActions.join('\n• ')}`;
+          }
+
+          if (overallStatus === 'not_ready') {
+            this.showMessage(message, 'error');
+          } else if (overallStatus === 'warning' || !readyToOperate) {
+            this.showMessage(message, 'warning');
+          } else {
+            this.showMessage(result.OverallMessage || 'Sistema verificado correctamente.', 'success');
+          }
+          this.isVerificationRunning = false;
+        },
+        error: (error) => {
+          console.error('Error in system verification:', error);
+          this.showMessage('Error al verificar el sistema: ' + (error.message || 'Error desconocido'), 'error');
+          this.isVerificationRunning = false;
+        }
+      });
+  }
+
+  // Initialize all queues (recreate queue states for all services)
+  initializeAllQueuesManual(): void {
+    if (!this.isSupervisor) {
+      this.showMessage('Solo supervisores y administradores pueden realizar esta acción', 'warning');
+      return;
+    }
+
+    const confirmMessage = `¿Inicializar todas las colas?
+
+Esta acción creará estados de cola para todos los tipos de servicio activos.
+Las colas existentes se actualizarán con los datos actuales de tickets.`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    this.isLoading = true;
+
+    this.queueService.initializeAllQueues()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          console.log('Queues initialized:', result);
+          const details = result.details || {};
+          this.showMessage(
+            `Inicialización completada: ${details.queues_created || 0} colas creadas, ${details.queues_updated || 0} actualizadas`,
+            'success'
+          );
+          this.loadQueueStates();
+          this.loadSummary();
+        },
+        error: (error) => {
+          console.error('Error initializing queues:', error);
+          this.showMessage('Error al inicializar colas: ' + (error.message || 'Error desconocido'), 'error');
+          this.isLoading = false;
+        }
+      });
+  }
+
+  // Check and fix consistency issues
+  checkAndFixConsistency(): void {
+    if (!this.isSupervisor) {
+      this.showMessage('Solo supervisores y administradores pueden realizar esta acción', 'warning');
+      return;
+    }
+
+    const fix = confirm('¿Desea corregir automáticamente los problemas encontrados?\n\nSí = Verificar y corregir\nNo = Solo verificar');
+
+    this.isLoading = true;
+
+    this.queueService.checkConsistency(fix)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          console.log('Consistency check result:', result);
+          if (result.is_consistent) {
+            this.showMessage('El sistema está consistente. No se encontraron problemas.', 'success');
+          } else {
+            const issueCount = result.issues?.length || 0;
+            if (fix && result.fixed_count > 0) {
+              this.showMessage(`Se corrigieron ${result.fixed_count} de ${issueCount} problemas encontrados.`, 'warning');
+            } else {
+              this.showMessage(`Se encontraron ${issueCount} problemas de consistencia.`, 'warning');
+            }
+          }
+          this.loadQueueStates();
+          this.loadSummary();
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error checking consistency:', error);
+          this.showMessage('Error al verificar consistencia', 'error');
+          this.isLoading = false;
+        }
+      });
   }
 }

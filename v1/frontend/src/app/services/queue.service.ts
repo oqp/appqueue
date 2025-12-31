@@ -284,41 +284,129 @@ export class QueueService {
 
   // Get service types (for filters)
   getServiceTypes(): Observable<ServiceType[]> {
-    return this.http.get<ServiceType[]>(
+    return this.http.get<any>(
       `${this.apiUrl}/service-types/`,
       { headers: this.getAuthHeaders() }
     ).pipe(
       map(response => {
+        console.log('Service types response:', response);
+        // El backend devuelve { services: [...], total, active_count, inactive_count }
+        if (response && response.services && Array.isArray(response.services)) {
+          return response.services.filter((s: ServiceType) => s.IsActive);
+        }
+        // Fallback si es un array directo
         if (Array.isArray(response)) {
           return response.filter(s => s.IsActive);
         }
         return [];
       }),
-      catchError(() => {
-        // Return mock data if API fails
-        return of([
-          {
-            Id: 1,
-            Name: 'Análisis de Sangre',
-            Code: 'LAB',
-            Color: '#4477ff',
-            TicketPrefix: 'A',
-            Priority: 1,
-            AverageTimeMinutes: 15,
-            IsActive: true
-          },
-          {
-            Id: 2,
-            Name: 'Rayos X',
-            Code: 'RAD',
-            Color: '#22c55e',
-            TicketPrefix: 'R',
-            Priority: 2,
-            AverageTimeMinutes: 20,
-            IsActive: true
-          }
-        ]);
+      catchError((error) => {
+        console.error('Error loading service types:', error);
+        // No usar mock data - propagar error real al usuario
+        return throwError(() => error);
       })
+    );
+  }
+
+  // Get queue with tickets (for dialog details)
+  getQueueWithTickets(queueId: number, includeCompleted: boolean = false): Observable<any> {
+    const params = new HttpParams()
+      .set('include_completed', includeCompleted.toString())
+      .set('limit', '20');
+
+    return this.http.get<any>(
+      `${this.apiUrl}/queue-states/${queueId}/with-tickets`,
+      {
+        headers: this.getAuthHeaders(),
+        params
+      }
+    ).pipe(
+      tap(result => console.log('Queue with tickets:', result)),
+      catchError(this.handleError)
+    );
+  }
+
+  // Get tickets by service type (waiting tickets in queue)
+  getTicketsByService(serviceTypeId: number, limit: number = 50): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/tickets/queue/${serviceTypeId}`,
+      {
+        headers: this.getAuthHeaders(),
+        params: new HttpParams().set('limit', limit.toString())
+      }
+    ).pipe(
+      map(response => Array.isArray(response) ? response : []),
+      catchError(() => of([]))
+    );
+  }
+
+  // Get general ticket statistics
+  getTicketStats(): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/tickets/stats/general`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      tap(result => console.log('Ticket stats:', result)),
+      catchError(() => of({
+        total_tickets: 0,
+        waiting_tickets: 0,
+        completed_tickets: 0,
+        average_wait_time: 0,
+        average_service_time: 0
+      }))
+    );
+  }
+
+  // Get statistics for a specific service type
+  getServiceStats(serviceTypeId: number): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/service-types/${serviceTypeId}/stats`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      tap(result => console.log('Service stats:', result)),
+      catchError(() => of({
+        tickets_today: 0,
+        completed_today: 0,
+        average_service_time: 0,
+        waiting_count: 0
+      }))
+    );
+  }
+
+  // ==================== ADMIN OPERATIONS ====================
+
+  // Daily cleanup - Cancel pending tickets, reset queues and stations
+  dailyCleanup(options: {
+    cancelPendingTickets?: boolean;
+    resetQueueStates?: boolean;
+    resetStationStates?: boolean;
+    clearRedisCache?: boolean;
+  } = {}): Observable<any> {
+    const request = {
+      cancel_pending_tickets: options.cancelPendingTickets ?? true,
+      reset_queue_states: options.resetQueueStates ?? true,
+      reset_station_states: options.resetStationStates ?? true,
+      clear_redis_cache: options.clearRedisCache ?? false
+    };
+
+    return this.http.post<any>(
+      `${this.apiUrl}/admin/daily-cleanup`,
+      request,
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      tap(result => console.log('Daily cleanup result:', result)),
+      catchError(this.handleError)
+    );
+  }
+
+  // Daily verification - Check system state (GET endpoint)
+  dailyVerification(): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/admin/daily-verification`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      tap(result => console.log('Daily verification result:', result)),
+      catchError(this.handleError)
     );
   }
 

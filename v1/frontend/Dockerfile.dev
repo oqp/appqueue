@@ -1,0 +1,21 @@
+FROM node:20-alpine
+
+# Zona horaria
+ENV TZ=America/Lima
+RUN apk add --no-cache tzdata \
+    && cp /usr/share/zoneinfo/$TZ /etc/localtime \
+    && echo $TZ > /etc/timezone
+
+WORKDIR /app
+
+# Dependencias primero (mejor cache)
+COPY package*.json ./
+RUN npm install
+
+# Código
+COPY . .
+
+# Angular dev server
+EXPOSE 4200
+
+CMD ["npm", "start", "--", "--host", "0.0.0.0", "--poll=2000"]

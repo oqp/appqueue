@@ -158,6 +158,32 @@ $font-size-xxlarge: 48px;
     }
   }
 
+  // Botón Sin Documento
+  .no-document-button {
+    margin-bottom: 20px;
+    padding: 12px 24px;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+  }
+
   // Teclado numérico circular
   .numeric-keyboard {
     display: flex;

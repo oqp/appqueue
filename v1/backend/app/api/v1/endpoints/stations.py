@@ -126,7 +126,7 @@ async def create_station(
         )
 
 
-@router.get("/", response_model=StationListResponse)
+@router.get("", response_model=StationListResponse)
 async def list_stations(
         skip: int = Query(0, ge=0, description="Registros a saltar"),
         limit: int = Query(100, ge=1, le=100, description="Límite de registros"),

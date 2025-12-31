@@ -122,9 +122,9 @@
           <ng-container matColumnDef="ServiceType">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Servicio</th>
             <td mat-cell *matCellDef="let station">
-              <mat-chip *ngIf="station.ServiceTypeName">
+              <span *ngIf="station.ServiceTypeName" class="service-chip">
                 {{ station.ServiceTypeName }}
-              </mat-chip>
+              </span>
               <span *ngIf="!station.ServiceTypeName" class="text-muted">-</span>
             </td>
           </ng-container>
@@ -135,7 +135,7 @@
             <td mat-cell *matCellDef="let station">
               <div class="location-cell">
                 <mat-icon class="location-icon">location_on</mat-icon>
-                {{ station.Location || '-' }}
+                <span>{{ station.Location || '-' }}</span>
               </div>
             </td>
           </ng-container>

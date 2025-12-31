@@ -1,13 +1,13 @@
 // service-types.component.scss
 .service-types-container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 12px 16px;
+  max-width: 100%;
+  margin: 0;
 }
 
 // Main Table Card
 .mat-card-header {
-  padding: 16px 24px;
+  padding: 10px 16px !important;
 
   .mat-card-title {
     margin: 0;
@@ -40,14 +40,21 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  font-size: 20px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
 
   .new-service-btn {
     margin-left: auto;
+    height: 32px;
+    line-height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
 
     mat-icon {
       margin-right: 4px;
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
     }
   }
 }
@@ -68,48 +75,55 @@ button.mat-raised-button.mat-primary {
 
 // Statistics Card
 .stats-card {
-  background: linear-gradient(135deg, rgba(68, 119, 255, 0.1) 0%, rgba(255, 255, 255, 0.95) 100%);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(68, 119, 255, 0.2);
+  background: linear-gradient(135deg, rgba(68, 119, 255, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid rgba(68, 119, 255, 0.15);
+
+  .mat-mdc-card-content {
+    padding: 8px 16px !important;
+  }
 
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 24px;
-    padding: 16px 0;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding: 4px 0;
 
     .stat-item {
       text-align: center;
       position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
 
       mat-icon {
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
-        margin-bottom: 8px;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+        margin-bottom: 2px;
       }
 
       .stat-value {
-        font-size: 28px;
+        font-size: 22px;
         font-weight: 600;
         color: #333;
-        margin: 4px 0;
+        line-height: 1.2;
       }
 
       .stat-label {
-        font-size: 12px;
+        font-size: 10px;
         color: #666;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
       }
 
       &:not(:last-child)::after {
         content: '';
         position: absolute;
-        right: -12px;
+        right: -8px;
         top: 50%;
         transform: translateY(-50%);
-        height: 40px;
+        height: 32px;
         width: 1px;
         background: rgba(0, 0, 0, 0.1);
       }
@@ -118,7 +132,7 @@ button.mat-raised-button.mat-primary {
 
   @media (max-width: 768px) {
     .stats-grid {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
 
       .stat-item::after {
         display: none;
@@ -130,27 +144,40 @@ button.mat-raised-button.mat-primary {
 // Filters Card
 .filters-card {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+
+  .mat-mdc-card-content {
+    padding: 12px 16px !important;
+  }
 
   .filters-form {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 12px;
     align-items: center;
 
     .filter-field {
       flex: 1;
-      min-width: 200px;
+      min-width: 180px;
+
+      .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
     }
 
     .filter-actions {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       margin-left: auto;
 
       mat-checkbox {
-        margin-right: 8px;
+        margin-right: 4px;
+      }
+
+      button {
+        padding: 0 12px;
+        height: 36px;
+        line-height: 36px;
       }
     }
   }
@@ -184,7 +211,7 @@ button.mat-raised-button.mat-primary {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 400px;
+  min-height: 200px;
 }
 
 // Table Container
@@ -196,59 +223,109 @@ button.mat-raised-button.mat-primary {
 // Table Styles
 .service-types-table {
   width: 100%;
-  min-width: 900px;
+  min-width: 800px;
+  table-layout: fixed;
+
+  // Column widths - optimizadas para mejor distribución
+  .mat-column-Code {
+    width: 110px;
+  }
+
+  .mat-column-Name {
+    width: auto;
+    min-width: 350px;
+  }
+
+  .mat-column-Priority {
+    width: 85px;
+  }
+
+  .mat-column-Prefix {
+    width: 50px;
+    text-align: center;
+  }
+
+  .mat-column-Time {
+    width: 55px;
+  }
+
+  .mat-column-Color {
+    width: 70px;
+    text-align: center;
+  }
+
+  .mat-column-Status {
+    width: 65px;
+    text-align: center;
+  }
+
+  .mat-column-Actions {
+    width: 110px;
+  }
 
   // Code Badge
   .code-badge {
     background: rgba(68, 119, 255, 0.1);
     color: #4477ff;
-    padding: 4px 8px;
+    padding: 3px 6px;
     border-radius: 4px;
     font-weight: 500;
     font-family: 'Courier New', monospace;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   // Service Name
   .service-name {
     strong {
       display: block;
-      margin-bottom: 2px;
+      font-size: 13px;
+      margin-bottom: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     small {
-      font-size: 11px;
+      font-size: 10px;
       opacity: 0.7;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 
   // Prefix Badge
   .prefix-badge {
-    background: #ffc107;
-    color: #000;
-    padding: 4px 8px;
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 3px 8px;
     border-radius: 4px;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 11px;
+    border: 1px solid rgba(21, 101, 192, 0.2);
   }
 
   // Time Cell
   .time-cell {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
+    font-size: 12px;
 
     .time-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
       opacity: 0.6;
     }
   }
 
   // Priority Chips - Usando colores consistentes
   .priority-chip {
-    min-width: 80px;
+    min-width: 70px;
+    height: 24px !important;
+    font-size: 11px !important;
     justify-content: center;
 
     &.priority-max {
@@ -279,8 +356,8 @@ button.mat-raised-button.mat-primary {
 
   // Color Preview
   .color-preview {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     border: 2px solid rgba(0, 0, 0, 0.12);
     display: inline-block;
@@ -295,6 +372,10 @@ button.mat-raised-button.mat-primary {
 
   // Status Chip
   .status-chip {
+    height: 22px !important;
+    font-size: 10px !important;
+    min-width: 55px;
+
     &.active-chip {
       background-color: #4caf50 !important;
       color: white !important;
@@ -315,16 +396,16 @@ button.mat-raised-button.mat-primary {
   // No Data
   .no-data {
     text-align: center;
-    padding: 48px !important;
+    padding: 24px !important;
     color: #666;
     font-style: italic;
 
     mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
       color: #ddd;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
     }
   }
 
@@ -337,6 +418,7 @@ button.mat-raised-button.mat-primary {
   // Header
   th.mat-header-cell {
     font-weight: 600;
+    font-size: 12px;
     color: #333;
     background: rgba(68, 119, 255, 0.05);
     border-bottom: 2px solid rgba(68, 119, 255, 0.2);
@@ -344,23 +426,39 @@ button.mat-raised-button.mat-primary {
 
   // Cell Padding
   td.mat-cell, th.mat-header-cell {
-    padding: 12px 16px;
+    padding: 6px 8px;
   }
 
-  // Actions Column
+  // Actions Column - todos los iconos en una línea
   td.mat-cell:last-child {
     text-align: right;
+    white-space: nowrap;
+    padding-right: 8px !important;
+
+    button.mat-mdc-icon-button {
+      width: 28px;
+      height: 28px;
+      padding: 2px;
+      margin: 0 1px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
   }
 }
 
 // Material Overrides
 ::ng-deep {
   .mat-mdc-chip {
-    height: 24px !important;
-    font-size: 12px;
+    height: 22px !important;
+    font-size: 11px;
+    padding: 0 8px;
 
     .mdc-evolution-chip__graphic {
-      height: 24px !important;
+      height: 22px !important;
     }
 
     .mdc-evolution-chip__text-label {
@@ -369,18 +467,111 @@ button.mat-raised-button.mat-primary {
     }
   }
 
-  .mat-mdc-form-field {
-    font-size: 14px;
+  // Priority Chip overrides - texto blanco
+  .priority-chip {
+    min-width: 70px;
+    height: 24px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    justify-content: center;
+
+    .mdc-evolution-chip__text-label {
+      color: white !important;
+    }
+
+    &.priority-max {
+      background-color: #d32f2f !important;
+    }
+
+    &.priority-high {
+      background-color: #f57c00 !important;
+    }
+
+    &.priority-medium {
+      background-color: #fbc02d !important;
+
+      .mdc-evolution-chip__text-label {
+        color: #333 !important;
+      }
+    }
+
+    &.priority-low {
+      background-color: #689f38 !important;
+    }
+
+    &.priority-min {
+      background-color: #388e3c !important;
+    }
+  }
+
+  // Status Chip overrides - texto blanco
+  .status-chip {
+    height: 22px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    min-width: 55px;
+    padding: 0 8px !important;
+
+    .mdc-evolution-chip__text-label {
+      color: white !important;
+    }
+
+    &.active-chip {
+      background-color: #2e7d32 !important;
+    }
+
+    &.inactive-chip {
+      background-color: #757575 !important;
+    }
+  }
+
+  // Form fields más compactos
+  .filters-card .mat-mdc-form-field {
+    font-size: 13px;
+
+    .mat-mdc-form-field-infix {
+      min-height: 40px;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+
+    .mat-mdc-floating-label {
+      top: 20px;
+    }
+
+    .mdc-text-field--outlined {
+      --mdc-outlined-text-field-container-shape: 6px;
+    }
   }
 
   .mat-mdc-paginator {
     background: transparent;
     border-top: 1px solid rgba(0, 0, 0, 0.12);
+    min-height: 44px;
+
+    .mat-mdc-paginator-container {
+      min-height: 44px;
+      padding: 0 8px;
+    }
+
+    .mat-mdc-paginator-page-size-label,
+    .mat-mdc-paginator-range-label {
+      font-size: 12px;
+    }
   }
 
   .mat-badge-content {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 600;
+  }
+
+  // Card content más compacto
+  .mat-mdc-card-content {
+    padding: 8px 16px !important;
+
+    &:last-child {
+      padding-bottom: 12px !important;
+    }
   }
 
   // Snackbar styles
@@ -398,14 +589,14 @@ button.mat-raised-button.mat-primary {
 // Responsive Design
 @media (max-width: 1024px) {
   .service-types-container {
-    padding: 16px;
+    padding: 8px 12px;
   }
 
   .service-types-table {
-    font-size: 13px;
+    font-size: 12px;
 
     td.mat-cell, th.mat-header-cell {
-      padding: 8px 12px;
+      padding: 4px 6px;
     }
   }
 }
@@ -413,13 +604,6 @@ button.mat-raised-button.mat-primary {
 @media (max-width: 600px) {
   .service-types-container {
     padding: 8px;
-  }
-
-  .displayedColumns {
-    // Hide some columns on mobile
-    &:not(.Code):not(.Name):not(.Priority):not(.Actions) {
-      display: none;
-    }
   }
 }
 
@@ -434,38 +618,38 @@ button.mat-raised-button.mat-primary {
 }
 
 .mb-3 {
-  margin-bottom: 24px;
+  margin-bottom: 10px;
 }
 
 // Header styles
 .mat-card-header {
+  padding: 10px 16px !important;
+
   .mat-card-title {
     width: 100%;
-    height: 45px;
+    height: 36px;
     display: flex;
     align-items: center;
+    margin: 0 !important;
 
-    .title-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
+    .title-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
 
-      .title-text {
-        font-size: 20px;
-        font-weight: 500;
-        color: #333;
-      }
+    .new-service-btn {
+      margin-left: auto;
+      height: 32px;
+      line-height: 32px;
+      padding: 0 12px;
+      font-size: 13px;
 
-      .new-service-btn {
-        margin-left: auto;
-
-        mat-icon {
-          margin-right: 4px;
-          font-size: 18px;
-          height: 18px;
-          width: 18px;
-        }
+      mat-icon {
+        margin-right: 4px;
+        font-size: 16px;
+        height: 16px;
+        width: 16px;
       }
     }
   }

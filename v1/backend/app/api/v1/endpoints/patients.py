@@ -40,7 +40,7 @@ def create_patient(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/", response_model=List[PatientResponse])
+@router.get("", response_model=List[PatientResponse])
 def get_patients(
         skip: int = Query(0, ge=0, description="Número de registros a saltar"),
         limit: int = Query(100, ge=1, le=100, description="Límite de registros a retornar"),

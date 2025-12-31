@@ -370,28 +370,72 @@ export class QueueDetailsDialogComponent implements OnInit {
   }
 
   loadTickets(): void {
-    // Aquí cargarías los tickets de esta cola específica
     this.loadingTickets = true;
+    const serviceTypeId = this.data.queue.ServiceTypeId;
 
-    // Simular carga de datos
-    setTimeout(() => {
-      this.data.tickets = [
-        // Datos de ejemplo, deberías cargar desde el servicio
-      ];
+    if (!serviceTypeId) {
       this.loadingTickets = false;
-    }, 1000);
+      this.data.tickets = [];
+      return;
+    }
+
+    // Cargar tickets en espera para este servicio
+    this.queueService.getTicketsByService(serviceTypeId, 20).subscribe({
+      next: (tickets) => {
+        console.log('Tickets loaded:', tickets);
+        this.data.tickets = tickets || [];
+        this.loadingTickets = false;
+      },
+      error: (error) => {
+        console.error('Error loading tickets:', error);
+        this.data.tickets = [];
+        this.loadingTickets = false;
+      }
+    });
   }
 
   loadStatistics(): void {
-    // Cargar estadísticas de esta cola
-    this.data.statistics = {
-      ticketsToday: 45,
-      completedToday: 32,
-      avgServiceTime: 12,
-      maxWaitTime: 35,
-      cancelledToday: 2,
-      peakHour: '10:00 - 11:00'
-    };
+    const serviceTypeId = this.data.queue.ServiceTypeId;
+
+    if (!serviceTypeId) {
+      this.data.statistics = {
+        ticketsToday: 0,
+        completedToday: 0,
+        avgServiceTime: 0,
+        maxWaitTime: 0,
+        cancelledToday: 0,
+        peakHour: 'N/A'
+      };
+      return;
+    }
+
+    // Cargar estadísticas reales del servicio
+    this.queueService.getServiceStats(serviceTypeId).subscribe({
+      next: (stats) => {
+        console.log('Service stats loaded:', stats);
+        // El backend devuelve: total_tickets, attended_tickets, pending_tickets,
+        // average_wait_time, average_service_time, completion_rate, peak_hour
+        this.data.statistics = {
+          ticketsToday: stats.total_tickets ?? 0,
+          completedToday: stats.attended_tickets ?? 0,
+          avgServiceTime: Math.round(stats.average_service_time ?? 0),
+          maxWaitTime: Math.round(stats.average_wait_time ?? 0),
+          cancelledToday: Math.max(0, (stats.total_tickets ?? 0) - (stats.attended_tickets ?? 0) - (stats.pending_tickets ?? 0)),
+          peakHour: stats.peak_hour ?? 'N/A'
+        };
+      },
+      error: (error) => {
+        console.error('Error loading statistics:', error);
+        this.data.statistics = {
+          ticketsToday: 0,
+          completedToday: 0,
+          avgServiceTime: 0,
+          maxWaitTime: 0,
+          cancelledToday: 0,
+          peakHour: 'N/A'
+        };
+      }
+    });
   }
 
   getStatusColor(): string {

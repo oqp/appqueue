@@ -18,6 +18,7 @@ from .notification import NotificationLog
 from .activity_log import ActivityLog
 from .daily_metrics import DailyMetrics
 from .queue_state import QueueState
+from .display_video import DisplayVideo
 
 # Lista de todos los modelos para facilitar importaciones
 __all__ = [
@@ -40,7 +41,8 @@ __all__ = [
     'NotificationLog',
     'ActivityLog',
     'DailyMetrics',
-    'QueueState'
+    'QueueState',
+    'DisplayVideo'
 ]
 
 # Metadatos de los modelos

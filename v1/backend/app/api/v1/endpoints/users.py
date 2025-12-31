@@ -231,7 +231,7 @@ async def create_user(
         )
 
 
-@router.get("/", response_model=UserListResponse)
+@router.get("", response_model=UserListResponse)
 async def list_users(
         skip: int = Query(0, ge=0, description="Registros a saltar"),
         limit: int = Query(10, ge=1, le=100, description="Límite de registros"),

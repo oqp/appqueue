@@ -74,8 +74,7 @@ class PatientResponse(BaseModel):
     CreatedAt: datetime = Field(..., description="Fecha de creación")
     UpdatedAt: datetime = Field(..., description="Fecha de actualización")
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
     @classmethod
     def from_orm(cls, obj):
@@ -116,8 +115,7 @@ class PatientSearch(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
     @classmethod
     def from_orm(cls, obj):
@@ -139,8 +137,7 @@ class CurrentTicketInfo(BaseModel):
     service_code: Optional[str] = Field(None, description="Código del servicio")
     CreatedAt: Optional[datetime] = Field(None, description="Fecha de creación")
 
-    class Config:
-        orm_mode = False  # No es un modelo ORM directo
+    model_config = {"from_attributes": False}  # No es un modelo ORM directo
 
 
 class PatientWithQueueInfo(PatientResponse):
@@ -150,8 +147,7 @@ class PatientWithQueueInfo(PatientResponse):
     total_visits: Optional[int] = Field(None, description="Total de visitas")
     last_visit: Optional[datetime] = Field(None, description="Última visita")
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
 class PatientStatistics(BaseModel):

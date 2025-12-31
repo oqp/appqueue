@@ -1,0 +1,122 @@
+# ===========================================
+# AppQueue - Docker Compose Production
+# ===========================================
+# Dominios:
+#   Frontend: https://munoz.qxpert.ingenius.online (puerto 6239)
+#   Backend:  https://munoz.qxpertserver.ingenius.online (puerto 6240)
+# ===========================================
+# Uso:
+#   docker-compose -f docker-compose.prod.yml up -d --build
+#   docker-compose -f docker-compose.prod.yml logs -f
+#   docker-compose -f docker-compose.prod.yml down
+# ===========================================
+
+services:
+  # =========================================
+  # Backend - FastAPI
+  # =========================================
+  backend:
+    image: appqueue-backend:latest
+    build:
+      context: ./v1/backend
+      dockerfile: Dockerfile
+    container_name: appqueue-backend
+    restart: always
+    ports:
+      - "6240:8000"
+    environment:
+      - TZ=America/Lima
+      # Database - SQL Server
+      - DATABASE_URL=${DATABASE_URL}
+      # Redis
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      # Security
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=${ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-480}
+      # Application
+      - APP_NAME=${APP_NAME:-AppQueue}
+      - ENVIRONMENT=production
+      - DEBUG=false
+      # CORS - Permitir frontend
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://munoz.qxpert.ingenius.online}
+    depends_on:
+      - redis
+    networks:
+      - appqueue-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =========================================
+  # Frontend - Angular + Nginx
+  # =========================================
+  frontend:
+    image: appqueue-frontend:latest
+    build:
+      context: ./v1/frontend
+      dockerfile: Dockerfile
+    container_name: appqueue-frontend
+    restart: always
+    ports:
+      - "6239:80"
+    environment:
+      - TZ=America/Lima
+    networks:
+      - appqueue-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =========================================
+  # Redis - Cache y Sesiones
+  # =========================================
+  redis:
+    image: redis:7-alpine
+    container_name: appqueue-redis
+    restart: always
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - appqueue-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+# =========================================
+# Networks
+# =========================================
+networks:
+  appqueue-network:
+    driver: bridge
+
+# =========================================
+# Volumes
+# =========================================
+volumes:
+  redis-data:
+    driver: local

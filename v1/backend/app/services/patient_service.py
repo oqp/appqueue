@@ -50,16 +50,27 @@ class PatientService:
                 data = dni_response["data"]
 
                 # Preparar datos para crear el paciente
-                # Convertir la respuesta del DNI al formato del schema
+                # Convertir la respuesta del DNI (Lab Muñoz API) al formato del schema
+                first_name = data.get("Nombres", "").strip()
+                last_name = f"{data.get('ApellidoPaterno', '')} {data.get('ApellidoMaterno', '')}".strip()
+
+                # Parsear fecha de nacimiento si viene del servicio
+                birth_date = None
+                if data.get("FechaNacimiento"):
+                    try:
+                        birth_date = date.fromisoformat(data["FechaNacimiento"])
+                    except (ValueError, TypeError):
+                        birth_date = None
+
                 patient_dict = {
                     "document_type": "DNI",
                     "document_number": data.get("DNI", document_number),
-                    "first_name": data.get("Nombres", "").strip(),
-                    "last_name": f"{data.get('ApellidoPaterno', '')} {data.get('ApellidoMaterno', '')}".strip(),
-                    "birth_date": None,  # El servicio DNI no proporciona fecha de nacimiento
-                    "gender": None,  # El servicio DNI no proporciona género
-                    "phone": None,
-                    "email": None
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "birth_date": birth_date,
+                    "gender": data.get("Genero"),  # M o F desde el servicio
+                    "phone": data.get("Telefono"),
+                    "email": data.get("Email")
                 }
 
                 # Crear el objeto PatientCreate desde el diccionario
@@ -77,7 +88,12 @@ class PatientService:
                     raise e
 
             elif dni_response.get("status") == "error":
-                # Si hay error en el servicio externo
+                # Si hay error en el servicio externo, retornar None para indicar que no se encontró
+                # Esto permite al frontend mostrar el diálogo de "paciente no encontrado"
+                error_code = dni_response.get("error", {}).get("code", "")
+                if error_code in ["DNI_NOT_FOUND", "API_ERROR"]:
+                    return None
+                # Para otros errores (conexión, timeout), lanzar excepción
                 error_info = dni_response.get("error", {})
                 raise ValueError(error_info.get("message", "Error al consultar el DNI"))
             else:

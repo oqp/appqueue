@@ -1,0 +1,70 @@
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 20px;
+  font-weight: 500;
+
+  mat-icon {
+    color: #1565c0;
+  }
+}
+
+mat-dialog-content {
+  padding: 24px !important;
+  min-width: 400px;
+}
+
+.patient-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.half-width {
+  flex: 1;
+}
+
+.toggle-row {
+  padding: 8px 0;
+  margin-top: 8px;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+  gap: 8px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  mat-dialog-content {
+    min-width: auto;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .half-width {
+    width: 100%;
+  }
+}

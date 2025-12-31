@@ -103,6 +103,75 @@ class CRUDTicket(CRUDBase[Ticket, TicketCreate, TicketUpdate]):
             logger.error(f"Error creando ticket: {e}")
             raise
 
+    def create_anonymous_ticket(
+            self,
+            db: Session,
+            *,
+            service_type_id: int,
+            document_number: Optional[str] = None,
+            notes: Optional[str] = None
+    ) -> Ticket:
+        """
+        Crea un ticket anónimo (sin paciente registrado)
+
+        Args:
+            db: Sesión de base de datos
+            service_type_id: ID del tipo de servicio
+            document_number: Número de documento ingresado (para referencia)
+            notes: Notas adicionales
+
+        Returns:
+            Ticket: Ticket creado
+        """
+        try:
+            # Obtener tipo de servicio para el prefijo
+            service_type = db.query(ServiceType).filter(ServiceType.Id == service_type_id).first()
+            if not service_type:
+                raise ValueError(f"Tipo de servicio no encontrado: {service_type_id}")
+
+            # Generar número de ticket
+            ticket_number = self._generate_ticket_number(db, service_type)
+
+            # Calcular posición en la cola
+            position = self._get_next_position(db, service_type_id)
+
+            # Calcular tiempo estimado de espera
+            estimated_wait_time = self._calculate_estimated_wait_time(db, service_type_id, position)
+
+            # Notas con referencia al documento
+            full_notes = notes or f"Ticket anónimo - Documento: {document_number or 'N/A'}"
+
+            # Crear ticket sin PatientId
+            ticket_data = {
+                "TicketNumber": ticket_number,
+                "PatientId": None,  # Sin paciente
+                "ServiceTypeId": service_type_id,
+                "StationId": None,
+                "Status": "Waiting",
+                "Position": position,
+                "EstimatedWaitTime": estimated_wait_time,
+                "Notes": full_notes
+            }
+
+            ticket = Ticket(**ticket_data)
+            db.add(ticket)
+            db.commit()
+            db.refresh(ticket)
+
+            # Generar código QR
+            qr_data = ticket.generate_qr_code()
+            ticket.QrCode = qr_data
+            db.commit()
+            db.refresh(ticket)
+
+            logger.info(f"Ticket anónimo creado: {ticket_number} - Documento: {document_number}")
+            return ticket
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error creando ticket anónimo: {e}")
+            raise
+
     def _generate_ticket_number(self, db: Session, service_type: ServiceType) -> str:
         """
         Genera el número de ticket para el día actual

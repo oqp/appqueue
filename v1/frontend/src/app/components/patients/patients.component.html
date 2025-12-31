@@ -1,0 +1,105 @@
+<div class="patients-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="header-icon">people</mat-icon>
+        <div>
+          <h1>Gestión de Pacientes</h1>
+          <p class="subtitle">Administra los pacientes del laboratorio</p>
+        </div>
+      </div>
+      <div class="stats-chips">
+        <span class="stat-chip">
+          <mat-icon>people</mat-icon>
+          {{ totalPatients }} pacientes
+        </span>
+        <span class="stat-chip active">
+          <mat-icon>check_circle</mat-icon>
+          {{ activePatients }} activos
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <mat-card class="actions-card">
+    <div class="actions-bar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar paciente</mat-label>
+        <input matInput [(ngModel)]="searchTerm"
+               placeholder="Nombre o documento..."
+               (keyup.enter)="applyFilter()">
+        <button mat-icon-button matSuffix *ngIf="searchTerm" (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+        <button mat-icon-button matSuffix (click)="applyFilter()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="createPatient()">
+        <mat-icon>person_add</mat-icon>
+        Nuevo Paciente
+      </button>
+    </div>
+  </mat-card>
+
+  <!-- Table -->
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div class="loading-overlay" *ngIf="loading">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <table mat-table [dataSource]="dataSource" matSort class="patients-table">
+        <!-- Document Column -->
+        <ng-container matColumnDef="document_number">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Documento</th>
+          <td mat-cell *matCellDef="let patient">
+            <span class="document-number">{{ patient.document_number }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Name Column -->
+        <ng-container matColumnDef="full_name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre Completo</th>
+          <td mat-cell *matCellDef="let patient">{{ patient.full_name }}</td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let patient">
+            <mat-chip [class.active]="patient.is_active" [class.inactive]="!patient.is_active">
+              {{ patient.is_active ? 'Activo' : 'Inactivo' }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let patient">
+            <button mat-icon-button color="primary" (click)="editPatient(patient)" matTooltip="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="!loading && dataSource.data.length === 0">
+        <mat-icon>person_search</mat-icon>
+        <h3>No se encontraron pacientes</h3>
+        <p *ngIf="searchTerm">No hay resultados para "{{ searchTerm }}"</p>
+        <p *ngIf="!searchTerm">Agrega un nuevo paciente para comenzar</p>
+      </div>
+
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

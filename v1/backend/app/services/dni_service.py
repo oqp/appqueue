@@ -1,84 +1,173 @@
-# archivo: dni_peru.py
+# archivo: dni_service.py
 import json
-import re
 import requests
 from typing import Dict, Optional
 from datetime import datetime
+import logging
 
-URL = "https://dniperu.com/querySelector"
+logger = logging.getLogger(__name__)
 
-LABEL_VARIANTS = {
-    "DNI": [r"N[uú]mero\s+de\s+DNI", r"N[uú]mero\s+DNI", r"Nro\.?\s*DNI", r"DNI", r"Num\.?\s*DNI"],
-    "Nombres": [r"Nombres?", r"Nombre\(s\)", r"Nombre"],
-    "ApellidoPaterno": [r"Apellido\s+Paterno", r"Ap\.?\s*Paterno", r"Apellid[oó]Paterno", r"Ap\s*Pater\.?"],
-    "ApellidoMaterno": [r"Apellido\s+Materno", r"Ap\.?\s*Materno", r"Apellid[oó]Materno", r"Ap\s*Mater\.?"],
-    "CodigoVerificacion": [r"C[oó]digo\s+(?:de\s+)?Verificaci[oó]n", r"Cod\.?\s*Verificaci[oó]n", r"C[oó]d\s*Verif\.?"],
-}
-ALL_LABELS_ALT = "|".join(f"(?:{v})" for vs in LABEL_VARIANTS.values() for v in vs)
+# URL del servicio externo de DNI (Lab Muñoz)
+URL = "https://labmunoz.server.ingenius.online/api/p/gpxdni"
 
-def build_label_pattern(label_key: str) -> re.Pattern:
-    variants_alt = "|".join(f"(?:{v})" for v in LABEL_VARIANTS[label_key])
-    pat = rf"(?P<label>{variants_alt})\s*[:：]\s*(?P<value>.*?)(?=\s*(?:{ALL_LABELS_ALT})\s*[:：]|$)"
-    return re.compile(pat, flags=re.IGNORECASE | re.DOTALL)
 
-PATTERNS = {k: build_label_pattern(k) for k in LABEL_VARIANTS.keys()}
+def consultar_dni(dni: str, timeout: int = 15) -> Dict:
+    """
+    Consulta el DNI en el servicio externo de Lab Muñoz.
 
-def clean_digits(s: Optional[str]) -> Optional[str]:
-    if s is None: return None
-    m = re.findall(r"\d+", s)
-    return "".join(m) if m else None
-
-def tidy_text(s: Optional[str]) -> Optional[str]:
-    if s is None: return None
-    s = re.sub(r"[ \t]+", " ", s.strip())
-    s = re.sub(r"\s*(?:\r?\n|;)\s*", " ", s).strip()
-    return s
-
-# Mapeo de patrones de error a códigos de error
-ERROR_PATTERNS = {
-    r"\bel\s+dni\s+debe\s+ser\s+un\s+n[uú]mero\s+de\s*8\s+d[ií]gitos\b": "INVALID_DNI_LENGTH",
-    r"\bdni\s+inv[aá]lido\b": "INVALID_DNI",
-    r"\bno\s+existe\b": "DNI_NOT_FOUND",
-    r"\bno\s+encontrado\b": "DNI_NOT_FOUND",
-    r"\bno\s+se\s+encontr[oó]\b": "DNI_NOT_FOUND",
-    r"\bformato\b": "INVALID_FORMAT",
-    r"\berror\b": "GENERIC_ERROR",
-}
-
-def detect_error_code(msg: str) -> Optional[str]:
-    for pattern, code in ERROR_PATTERNS.items():
-        if re.search(pattern, msg, flags=re.IGNORECASE):
-            return code
-    return None
-
-def parse_mensaje_api(mensaje: str, dni: str) -> Dict:
-    data = {
-        "DNI": None,
-        "Nombres": None,
-        "ApellidoPaterno": None,
-        "ApellidoMaterno": None,
-        "CodigoVerificacion": None,
+    La API retorna:
+    {
+        "errors": [],
+        "data": {
+            "apellidoPaterno": "QUINTANILLA",
+            "apellidoMaterno": "PEREZ",
+            "nombres": "OSCAR JAVIER",
+            "nombre": "QUINTANILLA PEREZ OSCAR JAVIER",
+            "documento": "29636795",
+            "sexo": "HOMBRE",
+            "fechaNacimiento": "1975-04-30T00:00:00",
+            "edad": 50,
+            "telefono1": null,
+            "email": null,
+            ...
+        },
+        "message": ""
     }
 
-    found_any = False
-    for key, pat in PATTERNS.items():
-        m = pat.search(mensaje)
-        if m:
-            val = tidy_text(m.group("value"))
-            if key in ("DNI", "CodigoVerificacion"):
-                val = clean_digits(val)
-            data[key] = val
-            found_any = True
+    Returns:
+        Diccionario con formato estándar:
+        {
+            "status": "success" | "error",
+            "data": {...} | None,
+            "error": {...} | None,
+            "meta": {...}
+        }
+    """
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
 
-    if not found_any:
-        msg_norm = mensaje.strip()
-        code = detect_error_code(msg_norm) or "UNKNOWN_ERROR"
+        url = f"{URL}/{dni}"
+        logger.info(f"Consultando DNI en: {url}")
+
+        response = requests.get(url, headers=headers, timeout=timeout)
+        response.raise_for_status()
+
+        payload = response.json()
+        logger.info(f"Respuesta del servicio DNI: {payload}")
+
+        # Verificar si hay errores en la respuesta
+        if payload.get("errors") and len(payload["errors"]) > 0:
+            return {
+                "status": "error",
+                "data": None,
+                "error": {
+                    "message": payload["errors"][0] if payload["errors"] else "Error desconocido",
+                    "code": "API_ERROR"
+                },
+                "meta": {
+                    "dni_consultado": dni,
+                    "timestamp": datetime.utcnow().isoformat() + "Z"
+                }
+            }
+
+        # Verificar si hay datos válidos
+        data = payload.get("data")
+        if not data:
+            return {
+                "status": "error",
+                "data": None,
+                "error": {
+                    "message": "DNI no encontrado en el servicio externo",
+                    "code": "DNI_NOT_FOUND"
+                },
+                "meta": {
+                    "dni_consultado": dni,
+                    "timestamp": datetime.utcnow().isoformat() + "Z"
+                }
+            }
+
+        # Mapear la respuesta al formato interno
+        # Determinar género basado en la respuesta
+        gender = None
+        if data.get("generoHombre"):
+            gender = "M"
+        elif data.get("generoMujer"):
+            gender = "F"
+        elif data.get("sexo"):
+            gender = "M" if data["sexo"].upper() == "HOMBRE" else "F"
+
+        # Parsear fecha de nacimiento
+        birth_date = None
+        if data.get("fechaNacimiento"):
+            try:
+                # El formato viene como "1975-04-30T00:00:00"
+                birth_date = data["fechaNacimiento"].split("T")[0]
+            except Exception:
+                birth_date = None
+
+        mapped_data = {
+            "DNI": data.get("documento", dni),
+            "Nombres": data.get("nombres", ""),
+            "ApellidoPaterno": data.get("apellidoPaterno", ""),
+            "ApellidoMaterno": data.get("apellidoMaterno", ""),
+            "NombreCompleto": data.get("nombre", ""),
+            "FechaNacimiento": birth_date,
+            "Edad": data.get("edad"),
+            "Genero": gender,
+            "Telefono": data.get("telefono1"),
+            "Email": data.get("email"),
+            "Direccion": data.get("direccion")
+        }
+
+        return {
+            "status": "success",
+            "data": mapped_data,
+            "meta": {
+                "dni_consultado": dni,
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+        }
+
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout al consultar DNI: {dni}")
         return {
             "status": "error",
             "data": None,
             "error": {
-                "message": msg_norm or "Respuesta vacía del servidor",
-                "code": code
+                "message": "Tiempo de espera agotado al consultar el DNI",
+                "code": "TIMEOUT"
+            },
+            "meta": {
+                "dni_consultado": dni,
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+        }
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error de conexión al consultar DNI {dni}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": {
+                "message": f"Error de conexión: {str(e)}",
+                "code": "CONNECTION_ERROR"
+            },
+            "meta": {
+                "dni_consultado": dni,
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error inesperado al consultar DNI {dni}: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "error": {
+                "message": f"Error inesperado: {str(e)}",
+                "code": "UNKNOWN_ERROR"
             },
             "meta": {
                 "dni_consultado": dni,
@@ -86,39 +175,6 @@ def parse_mensaje_api(mensaje: str, dni: str) -> Dict:
             }
         }
 
-    return {
-        "status": "success",
-        "data": data,
-        "meta": {
-            "dni_consultado": dni,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
-        }
-    }
-
-def consultar_dni(dni: str, timeout: int = 15) -> Dict:
-    """
-    Consulta el DNI en el servicio y devuelve un diccionario en formato estándar:
-    {
-        "status": "success" | "error",
-        "data": {...} | None,
-        "error": {...} | None,
-        "meta": {...}
-    }
-    """
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Referer": "https://dniperu.com/",
-        "Origin": "https://dniperu.com",
-    }
-    with requests.Session() as s:
-        s.headers.update(headers)
-        files = {"dni4": (None, dni)}
-        r = s.post(URL, files=files, timeout=timeout)
-        r.raise_for_status()
-        payload = r.json()
-
-    mensaje = payload.get("mensaje", "")
-    return parse_mensaje_api(mensaje, dni)
 
 # Permite usarlo como script independiente para pruebas
 if __name__ == "__main__":

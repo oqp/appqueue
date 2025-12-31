@@ -6,6 +6,10 @@ import {provideRouter, Routes} from '@angular/router';
 import { AppComponent } from './app/app.component';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import {DashboardComponent} from './app/components/dashboard/dashboard.component';
+import {UsersComponent} from './app/components/users/users.component';
+import {RolesComponent} from './app/components/roles/roles.component';
+import {DisplayVideosComponent} from './app/components/display-videos/display-videos.component';
+import {ReportsComponent} from './app/components/reports/reports.component';
 
 
 
@@ -42,7 +46,7 @@ const routes: Routes = [
       },
       {
         path: 'patients',
-        component: AppComponent,
+        component: PatientsComponent,
         canActivate: [RoleGuard],
         data: { roles: ['Admin', 'Supervisor', 'Técnico', 'Enfermero', 'Doctor', 'Recepcionista'] }
       },
@@ -61,13 +65,25 @@ const routes: Routes = [
 
       {
         path: 'users',
-        component: AppComponent,
+        component: UsersComponent,
         canActivate: [AdminGuard] // Solo administradores
       },
 
       {
+        path: 'roles',
+        component: RolesComponent,
+        canActivate: [AdminGuard] // Solo administradores
+      },
+
+      {
+        path: 'display-videos',
+        component: DisplayVideosComponent,
+        canActivate: [SupervisorGuard] // Supervisores y administradores
+      },
+
+      {
         path: 'reports',
-        component: AppComponent,
+        component: ReportsComponent,
         canActivate: [SupervisorGuard] // Supervisores y administradores
       },
 
@@ -135,6 +151,7 @@ import {UnauthorizedComponent} from './app/components/unauthorized/unauthorized.
 import {ServiceTypesComponent} from './app/components/service-types/service-types.component';
 import {TicketGenerationComponent} from './app/components/ticket-generation/ticket-generation.component';
 import {QueueManagementComponent} from './app/components/queue-management/queue-management.component';
+import {PatientsComponent} from './app/components/patients/patients.component';
 //
 //
 // // Basic routes configuration

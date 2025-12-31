@@ -19,6 +19,7 @@ from app.models.station import Station
 from app.models.service_type import ServiceType
 from app.models.ticket import Ticket
 from app.models.queue_state import QueueState
+from app.models.role import Role
 from app.core.redis import redis_available, cache_manager, check_redis_connection
 from app.websocket.connection_manager import websocket_manager
 
@@ -894,5 +895,347 @@ async def system_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener estado del sistema: {str(e)}"
+        )
+
+
+# ========================================
+# ENDPOINTS DE ROLES
+# ========================================
+
+@router.get(
+    "/roles",
+    summary="Obtener todos los roles",
+    description="Obtiene la lista de roles del sistema. Requiere autenticacion."
+)
+async def get_roles(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> List[dict]:
+    """
+    Endpoint para obtener todos los roles del sistema
+    """
+    try:
+        roles = db.query(Role).filter(Role.IsActive == True).order_by(Role.Id).all()
+
+        return [
+            {
+                "Id": role.Id,
+                "Name": role.Name,
+                "Description": role.Description,
+                "IsActive": role.IsActive
+            }
+            for role in roles
+        ]
+
+    except Exception as e:
+        logger.error(f"Error obteniendo roles: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener roles: {str(e)}"
+        )
+
+
+@router.get(
+    "/roles/{role_id}",
+    summary="Obtener un rol por ID",
+    description="Obtiene un rol especifico por su ID"
+)
+async def get_role(
+    role_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+) -> dict:
+    """
+    Endpoint para obtener un rol por ID
+    """
+    try:
+        role = db.query(Role).filter(Role.Id == role_id).first()
+
+        if not role:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Rol con ID {role_id} no encontrado"
+            )
+
+        # Contar usuarios con este rol
+        user_count = db.query(func.count(User.Id)).filter(User.RoleId == role_id).scalar() or 0
+
+        return {
+            "Id": role.Id,
+            "Name": role.Name,
+            "Description": role.Description,
+            "IsActive": role.IsActive,
+            "Permissions": role.permissions_list,
+            "UserCount": user_count,
+            "CreatedAt": role.CreatedAt.isoformat() if role.CreatedAt else None,
+            "UpdatedAt": role.UpdatedAt.isoformat() if role.UpdatedAt else None
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error obteniendo rol {role_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener rol: {str(e)}"
+        )
+
+
+@router.post(
+    "/roles/init",
+    summary="Inicializar roles por defecto",
+    description="Crea los roles por defecto del sistema si no existen"
+)
+async def init_default_roles(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+) -> dict:
+    """
+    Endpoint para inicializar los roles por defecto del sistema
+    """
+    try:
+        default_roles = [
+            {"Name": "Admin", "Description": "Administrador del sistema con acceso completo"},
+            {"Name": "Supervisor", "Description": "Supervisor con acceso a reportes y gestión de operaciones"},
+            {"Name": "Tecnico", "Description": "Técnico que atiende pacientes en estaciones"},
+            {"Name": "Recepcionista", "Description": "Recepcionista para registro de pacientes y tickets"}
+        ]
+
+        created = []
+        existing = []
+
+        for role_data in default_roles:
+            # Verificar si ya existe
+            existing_role = db.query(Role).filter(Role.Name == role_data["Name"]).first()
+
+            if existing_role:
+                existing.append(role_data["Name"])
+            else:
+                # Crear el rol
+                new_role = Role(
+                    Name=role_data["Name"],
+                    Description=role_data["Description"],
+                    IsActive=True
+                )
+                db.add(new_role)
+                created.append(role_data["Name"])
+
+        db.commit()
+
+        return {
+            "success": True,
+            "message": f"Inicialización completada",
+            "created": created,
+            "existing": existing,
+            "total_roles": len(created) + len(existing)
+        }
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error inicializando roles: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al inicializar roles: {str(e)}"
+        )
+
+
+class RoleUpdate(BaseModel):
+    """Schema para actualizar un rol"""
+    Name: Optional[str] = Field(None, min_length=2, max_length=50)
+    Description: Optional[str] = Field(None, max_length=200)
+    IsActive: Optional[bool] = None
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "Name": "Analista",
+                "Description": "Analista de laboratorio",
+                "IsActive": True
+            }
+        }
+    )
+
+
+@router.put(
+    "/roles/{role_id}",
+    summary="Actualizar un rol",
+    description="Actualiza los datos de un rol existente"
+)
+async def update_role(
+    role_id: int,
+    role_data: RoleUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+) -> dict:
+    """
+    Endpoint para actualizar un rol
+    """
+    try:
+        role = db.query(Role).filter(Role.Id == role_id).first()
+
+        if not role:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Rol con ID {role_id} no encontrado"
+            )
+
+        # Verificar si el nuevo nombre ya existe (si se esta cambiando)
+        if role_data.Name and role_data.Name != role.Name:
+            existing = db.query(Role).filter(
+                Role.Name == role_data.Name,
+                Role.Id != role_id
+            ).first()
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Ya existe un rol con el nombre '{role_data.Name}'"
+                )
+            role.Name = role_data.Name
+
+        if role_data.Description is not None:
+            role.Description = role_data.Description
+
+        if role_data.IsActive is not None:
+            role.IsActive = role_data.IsActive
+
+        db.commit()
+        db.refresh(role)
+
+        # Contar usuarios con este rol
+        user_count = db.query(func.count(User.Id)).filter(User.RoleId == role_id).scalar() or 0
+
+        return {
+            "Id": role.Id,
+            "Name": role.Name,
+            "Description": role.Description,
+            "IsActive": role.IsActive,
+            "UserCount": user_count,
+            "message": "Rol actualizado correctamente"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error actualizando rol {role_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al actualizar rol: {str(e)}"
+        )
+
+
+@router.delete(
+    "/roles/{role_id}",
+    summary="Eliminar un rol",
+    description="Elimina un rol del sistema (solo si no tiene usuarios asignados)"
+)
+async def delete_role(
+    role_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+) -> dict:
+    """
+    Endpoint para eliminar un rol
+    """
+    try:
+        role = db.query(Role).filter(Role.Id == role_id).first()
+
+        if not role:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Rol con ID {role_id} no encontrado"
+            )
+
+        # Verificar que no tenga usuarios asignados
+        user_count = db.query(func.count(User.Id)).filter(User.RoleId == role_id).scalar() or 0
+        if user_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"No se puede eliminar el rol '{role.Name}' porque tiene {user_count} usuario(s) asignado(s)"
+            )
+
+        role_name = role.Name
+        db.delete(role)
+        db.commit()
+
+        return {
+            "success": True,
+            "message": f"Rol '{role_name}' eliminado correctamente"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error eliminando rol {role_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al eliminar rol: {str(e)}"
+        )
+
+
+class RoleCreate(BaseModel):
+    """Schema para crear un rol"""
+    Name: str = Field(..., min_length=2, max_length=50)
+    Description: Optional[str] = Field(None, max_length=200)
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "Name": "Analista",
+                "Description": "Analista de laboratorio"
+            }
+        }
+    )
+
+
+@router.post(
+    "/roles",
+    summary="Crear un nuevo rol",
+    description="Crea un nuevo rol en el sistema"
+)
+async def create_role(
+    role_data: RoleCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+) -> dict:
+    """
+    Endpoint para crear un nuevo rol
+    """
+    try:
+        # Verificar si ya existe un rol con ese nombre
+        existing = db.query(Role).filter(Role.Name == role_data.Name).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Ya existe un rol con el nombre '{role_data.Name}'"
+            )
+
+        # Crear el rol
+        new_role = Role(
+            Name=role_data.Name,
+            Description=role_data.Description,
+            IsActive=True
+        )
+        db.add(new_role)
+        db.commit()
+        db.refresh(new_role)
+
+        return {
+            "Id": new_role.Id,
+            "Name": new_role.Name,
+            "Description": new_role.Description,
+            "IsActive": new_role.IsActive,
+            "message": "Rol creado correctamente"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creando rol: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al crear rol: {str(e)}"
         )
 

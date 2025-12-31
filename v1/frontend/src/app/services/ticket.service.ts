@@ -95,11 +95,12 @@ export interface TicketQuickCreate {
 
 export interface PatientCreate {
   document_number: string;
-  full_name: string;
-  birth_date: string;
+  first_name: string;
+  last_name: string;
+  birth_date?: string;
   gender: 'M' | 'F' | 'Otro';
-  phone?: string;
-  email?: string;
+  phone?: string | null;
+  email?: string | null;
 }
 
 export interface TicketListResponse {
@@ -168,8 +169,9 @@ export class TicketService {
   private mapPatientToBackend(patient: PatientCreate): any {
     return {
       document_number: patient.document_number,
-      full_name: patient.full_name,
-      birth_date: patient.birth_date,
+      first_name: patient.first_name,
+      last_name: patient.last_name,
+      birth_date: patient.birth_date || null,
       gender: patient.gender,
       phone: patient.phone || null,
       email: patient.email || null
@@ -292,7 +294,8 @@ export class TicketService {
         }),
         catchError((error) => {
           console.error('Error loading service types:', error);
-          return this.getMockServiceTypes();
+          // No usar mock data - mostrar error real al usuario
+          return throwError(() => error);
         })
       );
   }
@@ -363,6 +366,51 @@ export class TicketService {
       })
     );
   }
+  /**
+   * Crea un ticket anónimo (sin paciente registrado)
+   */
+  createAnonymousTicket(serviceTypeId: number, documentNumber?: string): Observable<Ticket> {
+    console.log('Creando ticket anónimo para servicio:', serviceTypeId);
+
+    const ticketData = {
+      ServiceTypeId: serviceTypeId,
+      Notes: `Ticket anónimo - Documento: ${documentNumber || 'N/A'}`,
+      IsAnonymous: true,
+      DocumentNumber: documentNumber || null
+    };
+
+    console.log('Datos enviados al backend:', ticketData);
+
+    return this.http.post<any>(
+      `${this.apiUrl}/tickets/anonymous`,
+      ticketData,
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      map(response => {
+        console.log('Respuesta del backend (ticket anónimo):', response);
+
+        return {
+          Id: response.Id || response.id,
+          TicketNumber: response.TicketNumber || response.ticket_number,
+          Code: response.Code || response.code || response.QrCode || response.qr_code,
+          PatientId: response.PatientId || response.patient_id || '',
+          PatientName: 'SIN REGISTRO',
+          PatientDocument: documentNumber || 'N/A',
+          ServiceTypeId: response.ServiceTypeId || response.service_type_id,
+          ServiceTypeName: response.ServiceTypeName || response.service_type_name,
+          EstimatedTime: response.EstimatedTime || response.estimated_time || response.EstimatedWaitTime,
+          CreatedAt: response.CreatedAt || response.created_at,
+          Status: response.Status || response.status || 'WAITING',
+          Priority: response.Priority || response.priority
+        } as Ticket;
+      }),
+      catchError((error) => {
+        console.error('Error completo del backend:', error);
+        return this.handleError(error);
+      })
+    );
+  }
+
   /**
    * Crea un ticket completo
    */
@@ -585,83 +633,4 @@ export class TicketService {
     }
   }
 
-  // ========== Mock Data for Development ==========
-
-  private getMockServiceTypes(): Observable<ServiceType[]> {
-    const mockData: ServiceType[] = [
-      {
-        Id: 1,
-        Code: 'ER',
-        Name: 'ENTREGA RESULTADOS',
-        Description: 'Entrega de resultados de exámenes',
-        Priority: 1,
-        AverageTimeMinutes: 10,
-        TicketPrefix: 'ER',
-        Color: '#4CAF50',
-        IsActive: true
-      },
-      {
-        Id: 2,
-        Code: 'LC',
-        Name: 'LABORATORIO CLINICO',
-        Description: 'Análisis de laboratorio clínico',
-        Priority: 2,
-        AverageTimeMinutes: 15,
-        TicketPrefix: 'LC',
-        Color: '#2196F3',
-        IsActive: true
-      },
-      {
-        Id: 3,
-        Code: 'TM',
-        Name: 'TOMA MUESTRAS',
-        Description: 'Toma de muestras',
-        Priority: 3,
-        AverageTimeMinutes: 20,
-        TicketPrefix: 'TM',
-        Color: '#FF9800',
-        IsActive: true
-      },
-      {
-        Id: 4,
-        Code: 'RX',
-        Name: 'RAYOS X',
-        Description: 'Estudios radiológicos',
-        Priority: 4,
-        AverageTimeMinutes: 25,
-        TicketPrefix: 'RX',
-        Color: '#9C27B0',
-        IsActive: true
-      },
-      {
-        Id: 5,
-        Code: 'AS',
-        Name: 'ANALISIS SANGRE',
-        Description: 'Análisis de sangre',
-        Priority: 5,
-        AverageTimeMinutes: 15,
-        TicketPrefix: 'AS',
-        Color: '#F44336',
-        IsActive: true
-      },
-      {
-        Id: 6,
-        Code: 'EO',
-        Name: 'EXAMEN ORINA',
-        Description: 'Análisis de orina',
-        Priority: 6,
-        AverageTimeMinutes: 10,
-        TicketPrefix: 'EO',
-        Color: '#00BCD4',
-        IsActive: true
-      }
-    ];
-
-    return new Observable(observer => {
-      setTimeout(() => {
-        observer.next(mockData);
-        observer.complete();
-      }, 500);
-    });
-  }
 }

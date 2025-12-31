@@ -1,0 +1,294 @@
+.display-videos-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 24px;
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .title-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .header-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: #1565c0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+
+  .stats-chips {
+    display: flex;
+    gap: 12px;
+
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: #f5f5f5;
+      font-size: 14px;
+      color: #666;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      &.active {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+    }
+  }
+}
+
+.add-video-card {
+  margin-bottom: 24px;
+
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #1565c0;
+      }
+    }
+  }
+
+  .add-form {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    .video-id-field {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .title-field {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    button {
+      margin-top: 4px;
+      height: 56px;
+    }
+  }
+}
+
+.videos-table-card {
+  position: relative;
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+  }
+}
+
+.videos-table {
+  width: 100%;
+
+  th {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .order-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .order-number {
+      width: 24px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    button {
+      width: 32px;
+      height: 32px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+
+  .video-id-link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #1565c0;
+    text-decoration: none;
+    font-family: monospace;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    .external-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      opacity: 0.7;
+    }
+  }
+
+  .video-thumbnail {
+    width: 120px;
+    height: 68px;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .inactive-row {
+    opacity: 0.6;
+    background: #fafafa;
+  }
+}
+
+.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  color: #999;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-weight: 500;
+    color: #666;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.info-card {
+  margin-top: 24px;
+  background: #e3f2fd;
+  border-left: 4px solid #1565c0;
+
+  mat-card-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px !important;
+
+    mat-icon {
+      color: #1565c0;
+      flex-shrink: 0;
+    }
+
+    .info-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+
+      code {
+        background: rgba(0, 0, 0, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .display-videos-container {
+    padding: 16px;
+  }
+
+  .page-header {
+    .header-content {
+      flex-direction: column;
+    }
+
+    .title-section {
+      .header-icon {
+        font-size: 36px;
+        width: 36px;
+        height: 36px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+    }
+  }
+
+  .add-video-card {
+    .add-form {
+      flex-direction: column;
+
+      .video-id-field,
+      .title-field {
+        width: 100%;
+        min-width: auto;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  .videos-table {
+    .video-thumbnail {
+      width: 80px;
+      height: 45px;
+    }
+  }
+}

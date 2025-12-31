@@ -37,10 +37,10 @@ from app.api.v1.endpoints.users import router as users_router
 from app.api.v1.endpoints.queue import router as queue_router
 from app.api.v1.endpoints.websocket import router as websocket_router
 from app.api.v1.endpoints.admin import router as admin_router
+from app.api.v1.endpoints.display import router as display_router
 # Routers pendientes por implementar - COMENTADOS
 # from app.api.v1.endpoints.notifications import router as notifications_router
-# from app.api.v1.endpoints.reports import router as reports_router
-# from app.api.v1.endpoints.admin import router as admin_router
+from app.api.v1.endpoints.reports import router as reports_router
 
 # ========================================
 # CONFIGURACIÓN DE LOGGING
@@ -327,11 +327,23 @@ app.include_router(
 
 # ❌ ROUTERS PENDIENTES - Comentados hasta implementar
 # app.include_router(notifications_router, prefix=API_V1_PREFIX, tags=["notifications"])
-# app.include_router(reports_router, prefix=API_V1_PREFIX, tags=["reports"])
+
+app.include_router(
+    reports_router,
+    prefix=API_V1_PREFIX,
+    tags=["reports"]
+)
+
 app.include_router(
     admin_router,
     prefix=API_V1_PREFIX,
     tags=["admin"]
+)
+
+app.include_router(
+    display_router,
+    prefix=API_V1_PREFIX,
+    tags=["display"]
 )
 
 logger.info("Todos los routers registrados correctamente")
@@ -389,10 +401,10 @@ def start_dev_server():
     """
     uvicorn.run(
         "app.main:app",
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=8000,
         # reload=True,
-        # reload_dirs=["app"],
+        reload_dirs=["app"],
         log_level="debug" if settings.DEBUG else "info"
     )
 

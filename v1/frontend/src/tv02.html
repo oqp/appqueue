@@ -583,27 +583,17 @@
 
 <script>
     // ==========================================
-    // CONFIGURACIÓN DE VIDEOS DE YOUTUBE
-    // ==========================================
-
-    const YOUTUBE_VIDEOS = [
-        'Qr61waJ6AZg',
-        'VIDEO_ID_2',
-        'VIDEO_ID_3'
-    ];
-
-    const VIDEO_ROTATION_INTERVAL = 300000; // 5 minutos
-    const YOUTUBE_PLAYLIST_ID = '';
-
-    // ==========================================
     // CONFIGURACIÓN DEL SISTEMA
     // ==========================================
 
     const API_URL = 'http://localhost:8000/api/v1';
     const POLLING_INTERVAL = 5000; // 5 segundos
+    const VIDEO_ROTATION_INTERVAL = 300000; // 5 minutos
 
     let currentVideoIndex = 0;
     let lastTicketId = null; // Para detectar cambios en el ticket actual
+    let youtubeVideos = []; // Se carga desde API
+    let videoRotationTimer = null;
 
     let appState = {
         currentTicket: null,
@@ -621,36 +611,65 @@
         updateDateTime();
         setInterval(updateDateTime, 1000);
 
+        // Cargar videos desde API e iniciar reproductor
+        fetchVideos();
+
         // Iniciar polling de datos
         fetchAllData();
         setInterval(fetchAllData, POLLING_INTERVAL);
 
-        initYouTubePlayer();
         updateConnectionStatus('connected');
     });
 
+    // Obtener videos desde la API
+    async function fetchVideos() {
+        try {
+            const response = await fetch(`${API_URL}/display/public/videos`);
+            if (response.ok) {
+                const videos = await response.json();
+                youtubeVideos = videos.map(v => v.VideoId);
+                console.log('Videos cargados desde API:', youtubeVideos);
+                initYouTubePlayer();
+            } else {
+                console.error('Error cargando videos:', response.status);
+                // Fallback: usar video por defecto
+                youtubeVideos = ['Qr61waJ6AZg'];
+                initYouTubePlayer();
+            }
+        } catch (error) {
+            console.error('Error obteniendo videos:', error);
+            // Fallback: usar video por defecto
+            youtubeVideos = ['Qr61waJ6AZg'];
+            initYouTubePlayer();
+        }
+    }
+
     // Inicializar reproductor de YouTube
     function initYouTubePlayer() {
-        const iframe = document.getElementById('youtubePlayer');
+        if (youtubeVideos.length === 0) {
+            console.log('No hay videos configurados');
+            return;
+        }
 
-        if (YOUTUBE_PLAYLIST_ID) {
-            iframe.src = `https://www.youtube.com/embed/videoseries?list=${YOUTUBE_PLAYLIST_ID}&autoplay=1&mute=0&loop=1&controls=0&modestbranding=1&rel=0`;
-        } else if (YOUTUBE_VIDEOS.length > 0 && YOUTUBE_VIDEOS[0] !== 'VIDEO_ID_1') {
-            loadVideo(0);
+        loadVideo(0);
 
-            if (YOUTUBE_VIDEOS.length > 1) {
-                setInterval(() => {
-                    currentVideoIndex = (currentVideoIndex + 1) % YOUTUBE_VIDEOS.length;
-                    loadVideo(currentVideoIndex);
-                }, VIDEO_ROTATION_INTERVAL);
-            }
+        // Configurar rotación si hay múltiples videos
+        if (youtubeVideos.length > 1) {
+            if (videoRotationTimer) clearInterval(videoRotationTimer);
+            videoRotationTimer = setInterval(() => {
+                currentVideoIndex = (currentVideoIndex + 1) % youtubeVideos.length;
+                loadVideo(currentVideoIndex);
+            }, VIDEO_ROTATION_INTERVAL);
         }
     }
 
     function loadVideo(index) {
         const iframe = document.getElementById('youtubePlayer');
-        const videoId = YOUTUBE_VIDEOS[index];
+        if (!youtubeVideos[index]) return;
+
+        const videoId = youtubeVideos[index];
         iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&loop=1&controls=0&modestbranding=1&rel=0&playlist=${videoId}&cc_lang_pref=es`;
+        console.log('Reproduciendo video:', videoId);
     }
 
     // Actualizar fecha y hora

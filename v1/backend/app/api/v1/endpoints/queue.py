@@ -1362,6 +1362,79 @@ async def get_public_waiting_tickets(
         )
 
 
+@router.get("/public/current-call", response_model=Dict[str, Any])
+async def get_public_current_call(
+    db: Session = Depends(get_db)
+):
+    """
+    Obtiene el ticket actualmente siendo llamado - PÚBLICO
+
+    Para uso en pantallas de display sin autenticación.
+    Retorna el último ticket con estado 'Called' o 'InProgress'.
+    """
+    try:
+        # Buscar el ticket más reciente que está siendo llamado o atendido
+        current_ticket = db.query(Ticket).filter(
+            Ticket.Status.in_(['Called', 'InProgress'])
+        ).order_by(Ticket.CalledAt.desc()).first()
+
+        if not current_ticket:
+            return {
+                "has_current": False,
+                "ticket_id": None,
+                "ticket_number": None,
+                "station_name": None,
+                "station_code": None,
+                "service_name": None,
+                "patient_name": None,
+                "called_at": None
+            }
+
+        # Obtener información del servicio
+        service = service_type_crud.get(db, id=current_ticket.ServiceTypeId)
+
+        # Obtener información de la estación
+        station_name = None
+        station_code = None
+        if current_ticket.StationId:
+            station = station_crud.get(db, id=current_ticket.StationId)
+            if station:
+                station_name = station.Name
+                station_code = station.Code
+
+        # Obtener nombre del paciente (parcial por privacidad)
+        patient_name = None
+        if current_ticket.PatientId:
+            from app.crud.patient import patient
+            patient_obj = patient.get(db, patient_id=str(current_ticket.PatientId))
+            if patient_obj and patient_obj.FullName:
+                # Mostrar solo primer nombre + inicial del apellido
+                names = patient_obj.FullName.split()
+                if len(names) >= 2:
+                    patient_name = f"{names[0]} {names[1][0]}."
+                else:
+                    patient_name = names[0] if names else None
+
+        return {
+            "has_current": True,
+            "ticket_id": str(current_ticket.Id),
+            "ticket_number": current_ticket.TicketNumber,
+            "station_name": station_name,
+            "station_code": station_code,
+            "service_name": service.Name if service else None,
+            "service_code": service.Code if service else None,
+            "patient_name": patient_name,
+            "status": current_ticket.Status,
+            "called_at": current_ticket.CalledAt.isoformat() if current_ticket.CalledAt else None
+        }
+
+    except Exception as e:
+        logger.error(f"Error obteniendo ticket actual: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener ticket actual"
+        )
+
 
 # ========================================
 # EXPORTS

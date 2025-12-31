@@ -37,21 +37,21 @@ import { takeUntil } from 'rxjs/operators';
       top: 70px;
       left: 24px;
       bottom: 24px;
-      width: 280px;
+      width: 260px;
       z-index: 900;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s ease;
 
       &.collapsed {
-        width: 85px;
+        width: 70px;
 
         .menu-container {
-          width: 85px;
-          padding: 16px 8px;
+          width: 70px;
+          padding: 12px 8px;
         }
 
         .menu-item {
-          width: 54px !important;
-          height: 54px !important;
+          width: 50px !important;
+          height: 50px !important;
           justify-content: center;
           padding: 0;
 
@@ -68,65 +68,45 @@ import { takeUntil } from 'rxjs/operators';
       display: flex;
       flex-direction: column;
       height: 100%;
-      width: 280px;
+      width: 260px;
       overflow-y: auto;
       overflow-x: hidden;
 
+      /* Estilo AppLab: Azul oscuro sólido */
       background: linear-gradient(
-        135deg,
-        rgba(68, 119, 255, 0.15) 0%,
-        rgba(59, 103, 231, 0.12) 100%
+          180deg,
+          #1565C0 0%,
+          #0D47A1 100%
       );
-      backdrop-filter: blur(20px) saturate(120%);
-      -webkit-backdrop-filter: blur(20px) saturate(120%);
 
-      border: 1px solid rgba(68, 119, 255, 0.18);
-      border-radius: 28px;
+      border: none;
+      border-radius: 12px;
 
       box-shadow:
-        0 20px 40px rgba(68, 119, 255, 0.12),
-        0 8px 24px rgba(59, 103, 231, 0.08),
-        inset 0 2px 2px rgba(255, 255, 255, 0.4),
-        inset 0 -1px 1px rgba(68, 119, 255, 0.05);
+        0 4px 20px rgba(13, 71, 161, 0.3),
+        0 2px 8px rgba(0, 0, 0, 0.15);
 
-      padding: 20px 16px;
+      padding: 16px 12px;
       align-items: flex-start;
-      gap: 12px;
+      gap: 6px;
       position: relative;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.15) 0%,
-          transparent 50%,
-          rgba(68, 119, 255, 0.03) 100%
-        );
-        border-radius: 28px;
-        pointer-events: none;
-      }
+      transition: all 0.3s ease;
 
       &::-webkit-scrollbar {
-        width: 6px;
+        width: 4px;
       }
 
       &::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
+        border-radius: 2px;
       }
 
       &::-webkit-scrollbar-thumb {
-        background: rgba(68, 119, 255, 0.3);
-        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
 
         &:hover {
-          background: rgba(68, 119, 255, 0.5);
+          background: rgba(255, 255, 255, 0.5);
         }
       }
     }
@@ -136,30 +116,28 @@ import { takeUntil } from 'rxjs/operators';
       justify-content: flex-start;
       align-items: center;
       width: 100% !important;
-      height: 54px !important;
+      height: 46px !important;
       cursor: pointer;
       border: none;
-      border-radius: 18px;
+      border-radius: 8px;
       position: relative;
       z-index: 1;
-      gap: 16px;
-      padding: 0 16px;
+      gap: 14px;
+      padding: 0 14px;
 
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      color: rgba(68, 119, 255, 0.7);
+      /* Items normales: transparente con texto blanco */
+      background: transparent;
+      color: rgba(255, 255, 255, 0.85);
 
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease;
 
       mat-icon {
-        font-size: 24px;
-        width: 24px;
-        height: 24px;
-        line-height: 24px;
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+        line-height: 22px;
         color: inherit;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         flex-shrink: 0;
       }
 
@@ -168,92 +146,37 @@ import { takeUntil } from 'rxjs/operators';
         font-weight: 500;
         color: inherit;
         white-space: nowrap;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         opacity: 1;
         overflow: hidden;
       }
 
       &:hover:not(.active) {
-        background: rgba(255, 255, 255, 0.5);
-        border-color: rgba(68, 119, 255, 0.3);
-        transform: translateX(4px);
-        color: rgba(68, 119, 255, 0.9);
-        box-shadow:
-          0 6px 20px rgba(68, 119, 255, 0.15),
-          0 2px 8px rgba(0, 0, 0, 0.05);
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
       }
 
       &.active {
-        background: linear-gradient(
-          135deg,
-          rgba(68, 119, 255, 0.95) 0%,
-          rgba(59, 103, 231, 0.95) 100%
-        );
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(68, 119, 255, 0.4);
-        color: white;
-        transform: translateX(8px) scale(1.02);
-        box-shadow:
-          0 8px 24px rgba(68, 119, 255, 0.35),
-          0 2px 8px rgba(59, 103, 231, 0.25),
-          inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        /* Item activo: fondo blanco con texto azul */
+        background: #ffffff;
+        color: #1565C0;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
         mat-icon, .menu-label {
-          color: white;
-          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
-        }
-
-        &::after {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 90%;
-          height: 90%;
-          border-radius: 16px;
-          background: radial-gradient(
-            circle at center,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 60%
-          );
-          opacity: 0;
-          animation: pulseGlow 2s ease-in-out infinite;
+          color: #1565C0;
         }
       }
 
       &:focus-visible {
-        outline: 2px solid rgba(68, 119, 255, 0.5);
+        outline: 2px solid rgba(255, 255, 255, 0.5);
         outline-offset: 2px;
-      }
-    }
-
-    @keyframes pulseGlow {
-      0%, 100% {
-        opacity: 0;
-      }
-      50% {
-        opacity: 0.6;
-      }
-    }
-
-    .menu-container {
-      animation: gentleFloat 8s ease-in-out infinite;
-    }
-
-    @keyframes gentleFloat {
-      0%, 100% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-5px);
       }
     }
 
     @media (max-width: 768px) {
       .sidebar {
-        left: -320px;
+        left: -280px;
 
         &:not(.collapsed) {
           left: 16px;
@@ -265,6 +188,7 @@ import { takeUntil } from 'rxjs/operators';
       }
     }
   `]
+
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

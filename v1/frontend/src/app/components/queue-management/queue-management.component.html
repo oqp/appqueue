@@ -31,6 +31,60 @@
           <mat-icon>download</mat-icon>
           Exportar
         </button>
+
+        <!-- Admin Actions Menu -->
+        <button mat-button
+                [matMenuTriggerFor]="adminMenu"
+                *ngIf="isSupervisor"
+                class="admin-menu-btn">
+          <mat-icon>admin_panel_settings</mat-icon>
+          Administración
+          <mat-icon>arrow_drop_down</mat-icon>
+        </button>
+
+        <mat-menu #adminMenu="matMenu">
+          <button mat-menu-item
+                  (click)="initializeAllQueuesManual()"
+                  [disabled]="isLoading">
+            <mat-icon>playlist_add</mat-icon>
+            <span>Inicializar Colas</span>
+          </button>
+
+          <button mat-menu-item
+                  (click)="checkAndFixConsistency()"
+                  [disabled]="isLoading">
+            <mat-icon>fact_check</mat-icon>
+            <span>Verificar Consistencia</span>
+          </button>
+
+          <button mat-menu-item
+                  (click)="performSystemVerification()"
+                  [disabled]="isVerificationRunning">
+            <mat-icon>verified</mat-icon>
+            <span>Verificar Sistema</span>
+            <mat-progress-spinner *ngIf="isVerificationRunning"
+                                  mode="indeterminate"
+                                  diameter="16"
+                                  class="inline-spinner">
+            </mat-progress-spinner>
+          </button>
+
+          <mat-divider *ngIf="isAdmin"></mat-divider>
+
+          <button mat-menu-item
+                  *ngIf="isAdmin"
+                  (click)="performDailyCleanup()"
+                  [disabled]="isCleanupRunning"
+                  class="danger-action">
+            <mat-icon>cleaning_services</mat-icon>
+            <span>Limpieza Diaria</span>
+            <mat-progress-spinner *ngIf="isCleanupRunning"
+                                  mode="indeterminate"
+                                  diameter="16"
+                                  class="inline-spinner">
+            </mat-progress-spinner>
+          </button>
+        </mat-menu>
       </div>
     </div>
   </mat-card>
