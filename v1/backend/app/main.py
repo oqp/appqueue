@@ -234,8 +234,8 @@ async def health_check():
         # Verificar base de datos
         db_status = check_database_connection()
 
-        # Verificar Redis
-        redis_status = redis_available()
+        # Verificar Redis (redis_available es un booleano, no una función)
+        redis_status = redis_available
 
         # Estado general
         is_healthy = db_status and redis_status
