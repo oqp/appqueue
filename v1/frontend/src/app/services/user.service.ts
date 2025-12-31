@@ -134,7 +134,7 @@ export class UserService {
     }
 
     return this.http.get<UserListResponse>(
-      `${this.apiUrl}/users/`,
+      `${this.apiUrl}/users`,
       {
         headers: this.getAuthHeaders(),
         params
