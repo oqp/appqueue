@@ -261,25 +261,25 @@ export class WorkstationsComponent implements OnInit, OnDestroy {
   private applyFilters(): void {
     const filters = this.filterForm.value;
 
-    this.dataSource.filterPredicate = (station: Station, filter: string) => {
+    this.dataSource.filterPredicate = (station: Station, filter: string): boolean => {
       const searchStr = filters.search?.toLowerCase() || '';
 
       // Search filter
-      const matchesSearch = !searchStr ||
+      const matchesSearch: boolean = !searchStr ||
         station.Name.toLowerCase().includes(searchStr) ||
         station.Code.toLowerCase().includes(searchStr) ||
-        station.Location?.toLowerCase().includes(searchStr) ||
-        station.Description?.toLowerCase().includes(searchStr);
+        (station.Location?.toLowerCase().includes(searchStr) ?? false) ||
+        (station.Description?.toLowerCase().includes(searchStr) ?? false);
 
       // Status filter
-      const matchesStatus = !filters.status || station.Status === filters.status;
+      const matchesStatus: boolean = !filters.status || station.Status === filters.status;
 
       // Service type filter
-      const matchesServiceType = !filters.serviceType ||
+      const matchesServiceType: boolean = !filters.serviceType ||
         station.ServiceTypeId === filters.serviceType;
 
       // Active filter
-      const matchesActive = !filters.onlyActive || station.IsActive === true;
+      const matchesActive: boolean = !filters.onlyActive || station.IsActive === true;
 
       return matchesSearch && matchesStatus && matchesServiceType && matchesActive;
     };
