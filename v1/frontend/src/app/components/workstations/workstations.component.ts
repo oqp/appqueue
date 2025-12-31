@@ -279,7 +279,7 @@ export class WorkstationsComponent implements OnInit, OnDestroy {
         station.ServiceTypeId === filters.serviceType;
 
       // Active filter
-      const matchesActive = !filters.onlyActive || station.IsActive;
+      const matchesActive = !filters.onlyActive || station.IsActive === true;
 
       return matchesSearch && matchesStatus && matchesServiceType && matchesActive;
     };

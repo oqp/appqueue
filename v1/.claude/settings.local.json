@@ -5,7 +5,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push)",
-      "Bash(npx ng:*)"
+      "Bash(npx ng:*)",
+      "Bash(git push:*)",
+      "Bash(cat:*)"
     ]
   }
 }
