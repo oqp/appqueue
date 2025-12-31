@@ -27,8 +27,8 @@
 ```
 AppQueue/
 ├── docker-compose.prod.yml    # Orquestacion de contenedores
-├── .env                       # Variables de entorno (crear desde .env.production)
-├── .env.production            # Plantilla de configuracion
+├── .env                       # Variables de entorno (crear desde env.production.example)
+├── env.production.example     # Plantilla de configuracion
 ├── DEPLOY.md                  # Esta guia
 └── v1/
     ├── backend/
@@ -54,7 +54,7 @@ cd AppQueue
 
 ```bash
 # Copiar plantilla
-cp .env.production .env
+cp env.production.example .env
 
 # Editar con tus valores
 nano .env
